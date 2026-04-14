@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 from unittest.mock import patch
 
@@ -96,3 +97,33 @@ def test_find_page_by_source_hash_hit(tmp_path: Path) -> None:
 def test_find_page_by_source_hash_miss(tmp_path: Path) -> None:
     state = State(sources={"deadbeef": "wiki/concepts/x.md"})
     assert find_page_by_source_hash(state, "nope") is None
+
+
+def test_load_state_invalid_schema_raises(tmp_path: Path) -> None:
+    """Valid JSON that violates the State pydantic schema must raise ValueError."""
+    state_path = tmp_path / "state.json"
+    # sources must be dict[str, str]; give it a list to trigger ValidationError
+    state_path.write_text('{"sources": ["not", "a", "dict"], "pages": {}}')
+    with pytest.raises(ValueError, match="failed schema validation"):
+        load_state(state_path)
+
+
+def test_atomic_write_temp_already_gone_before_cleanup(tmp_path: Path) -> None:
+    """Cleanup branch: if the temp file disappears before unlink, the
+    FileNotFoundError is silently swallowed and the original error is re-raised."""
+    target = tmp_path / "out.json"
+
+    def replace_then_vanish(src: str, dst: str) -> None:
+        # Remove the temp file to simulate it having been consumed elsewhere,
+        # then raise so the except BaseException cleanup branch executes.
+        Path(src).unlink(missing_ok=True)
+        raise OSError("simulated failure after temp removed")
+
+    with patch("ai_research.state.os.replace", side_effect=replace_then_vanish):
+        with pytest.raises(OSError, match="simulated failure"):
+            atomic_write(target, b'{"hello": "world"}')
+
+    # Target must not exist — the write was aborted before rename completed.
+    assert not target.exists()
+    # And no temp files left behind.
+    assert list(tmp_path.glob("*.tmp*")) == []
