@@ -39,6 +39,7 @@ import frontmatter
 from ai_research.archive import slugify
 from ai_research.state import State, atomic_write, load_state, save_state
 from ai_research.wiki.sources import SourceEntry, merge_sources_section
+from ai_research.wiki.stubs import create_stubs_for_body
 
 __all__ = ["MaterializeResult", "MaterializeStatus", "materialize"]
 
@@ -242,6 +243,17 @@ def materialize(  # noqa: PLR0913 — CLI-shaped keyword API, not hot path.
         payload += b"\n"
 
     atomic_write(page_path, payload)
+
+    # Concept stubs: scan the drafted body for [[wikilinks]] and create
+    # minimal stubs for any unresolved targets so the Obsidian graph stays
+    # un-broken (Story 02.1-003). The host page's own slug is skipped to
+    # avoid self-referential stubs.
+    create_stubs_for_body(
+        post.content,
+        wiki_dir=Path(wiki_dir),
+        now=timestamp,
+        skip_slugs={slug},
+    )
 
     # Update state.json after the page lands so a crash mid-page-write never
     # leaves state pointing at a non-existent file.

@@ -76,7 +76,7 @@
 **Technical Notes**: `--stub` accepts repeated flags for batch creation.
 
 **Definition of Done**:
-- [ ] Unit tests for new/existing/batch.
+- [x] Unit tests for new/existing/batch.
 
 **Dependencies**: 02.1-001
 **Risk Level**: Low
