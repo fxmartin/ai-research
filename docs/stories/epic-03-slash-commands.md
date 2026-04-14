@@ -34,9 +34,9 @@
 **Technical Notes**: The slash command is a prose spec telling Claude: (1) call `ai-research extract`, (2) draft the page per template, (3) collect concept names, (4) call `ai-research materialize --stub` per concept, (5) call `ai-research materialize --source ... --from -`. Keep it brief and deterministic — less room for model drift.
 
 **Definition of Done**:
-- [ ] `.claude/commands/ingest.md` committed.
-- [ ] Interactive smoke test on a real PDF.
-- [ ] Headless smoke test: `claude -p "/ingest ./fixtures/paper.pdf"` succeeds.
+- [x] `.claude/commands/ingest.md` committed.
+- [x] Interactive smoke test on a real PDF.
+- [x] Headless smoke test: `claude -p "/ingest ./fixtures/paper.pdf"` succeeds.
 
 **Dependencies**: Epic-01, Epic-02
 **Risk Level**: Medium — prose drift across Claude versions.
@@ -158,11 +158,11 @@
 
 ## Epic Progress
 
-- [ ] Story 03.1-001 (5 pts)
+- [x] Story 03.1-001 (5 pts)
 - [x] Story 03.1-002 (2 pts)
 - [ ] Story 03.2-001 (3 pts)
 - [ ] Story 03.2-002 (1 pt)
 - [ ] Story 03.3-001 (5 pts)
 - [ ] Story 03.3-002 (1 pt)
 
-**Completed**: 1 / 6 stories · 2 / 17 pts.
+**Completed**: 2 / 6 stories · 7 / 17 pts.
