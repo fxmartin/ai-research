@@ -28,6 +28,7 @@ from ai_research.scan import DEFAULT_MIN_AGE_SECONDS, scan_raw
 from ai_research.search import run_search
 from ai_research.state import load_state
 from ai_research.wiki.index_rebuild import rebuild_index as rebuild_index_impl
+from ai_research.wiki.materialize import MaterializeStatus
 from ai_research.wiki.materialize import materialize as materialize_page
 
 app = typer.Typer(
@@ -194,6 +195,11 @@ def materialize(
         "--source-url",
         help="Original URL for web sources; recorded in the ## Sources section.",
     ),
+    force: bool = typer.Option(  # noqa: B008
+        False,
+        "--force",
+        help="Rewrite even when the page is locked or the source_hash is unchanged.",
+    ),
 ) -> None:
     """Write ``wiki/<slug>.md`` from a draft, atomically, with frontmatter."""
     if draft is None and not read_stdin:
@@ -211,12 +217,24 @@ def materialize(
             state_path=state_file,
             stdin=sys.stdin if read_stdin else None,
             source_url=source_url,
+            force=force,
         )
     except FileNotFoundError as exc:
         typer.echo(str(exc), err=True)
         raise typer.Exit(code=1) from exc
 
-    typer.echo(str(result.page_path))
+    if result.status is MaterializeStatus.SKIPPED:
+        typer.echo(f"skipped (source_hash unchanged): {result.page_path}")
+    elif result.status is MaterializeStatus.LOCKED:
+        typer.echo(
+            f"warning: page is locked, skipping rewrite: {result.page_path}",
+            err=True,
+        )
+        typer.echo(str(result.page_path))
+    elif result.status is MaterializeStatus.UPDATED:
+        typer.echo(f"updated: {result.page_path}")
+    else:
+        typer.echo(str(result.page_path))
 
 
 @app.command("index-rebuild")
