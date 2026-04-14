@@ -80,7 +80,7 @@
 **Technical Notes**: Parse frontmatter + regex for `[[...]]` wikilinks. Resolve against `state.json` and `wiki/**/*.md`. Aliases (`[[target|display]]`) supported.
 
 **Definition of Done**:
-- [ ] Unit tests for each failure mode.
+- [x] Unit tests for each failure mode.
 - [ ] Invoked in CI.
 
 **Dependencies**: 02.1-001, 02.1-003, 02.2-001
@@ -137,7 +137,7 @@
 
 - [x] Story 04.1-001 (3 pts)
 - [ ] Story 04.1-002 (3 pts)
-- [ ] Story 04.2-001 (3 pts)
+- [x] Story 04.2-001 (3 pts)
 - [ ] Story 04.3-001 (1 pt)
 - [ ] Story 04.3-002 (1 pt)
 

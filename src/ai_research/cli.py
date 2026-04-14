@@ -32,6 +32,7 @@ from ai_research.wiki.index_rebuild import rebuild_index as rebuild_index_impl
 from ai_research.wiki.materialize import MaterializeStatus
 from ai_research.wiki.materialize import materialize as materialize_page
 from ai_research.wiki.stubs import create_stub
+from ai_research.wiki.vault_lint import lint_vault
 
 app = typer.Typer(
     name="ai-research",
@@ -344,6 +345,37 @@ def ask_check(
 
     typer.echo(json.dumps(result.to_dict()))
     if not result.ok:
+        raise typer.Exit(code=1)
+
+
+@app.command("vault-lint")
+def vault_lint(
+    wiki_dir: Path = typer.Argument(  # noqa: B008
+        Path("wiki"),
+        help="Root of the Obsidian-compatible wiki vault to lint.",
+    ),
+) -> None:
+    """Verify the wiki vault is Obsidian-compatible.
+
+    Checks that every ``[[wikilink]]`` resolves to a page or stub, all
+    frontmatter parses, and file naming follows the slug convention.
+    Prints a JSON summary of ``{ok, pages, stubs, wikilinks, orphans,
+    issues}`` to stdout. Exit code ``1`` on any violation, ``2`` on a
+    missing ``wiki_dir``.
+    """
+    try:
+        report = lint_vault(wiki_dir)
+    except FileNotFoundError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=2) from exc
+
+    for issue in report.issues:
+        typer.echo(
+            f"{issue.path}:{issue.line}: {issue.kind}: {issue.message}",
+            err=True,
+        )
+    typer.echo(json.dumps(report.to_dict()))
+    if not report.ok:
         raise typer.Exit(code=1)
 
 
