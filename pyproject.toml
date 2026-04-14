@@ -1,0 +1,42 @@
+[project]
+name = "ai-research"
+version = "0.1.0"
+description = "Claude Code-native CLI + Python toolkit for AI research workflows."
+readme = "README.md"
+requires-python = ">=3.12"
+authors = [{ name = "FX Martin" }]
+dependencies = [
+    "typer>=0.12.0",
+]
+
+[project.scripts]
+ai-research = "ai_research.cli:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ai_research"]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+    "ruff>=0.5.0",
+    "pyright>=1.1.370",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.pyright]
+pythonVersion = "3.12"
+include = ["src", "tests"]
+typeCheckingMode = "basic"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -33,9 +33,9 @@
 **Technical Notes**: Src layout. Entry point via `[project.scripts]`. Python 3.12+.
 
 **Definition of Done**:
-- [ ] `pyproject.toml` committed.
-- [ ] `ai-research --help` works after `uv tool install -e .`.
-- [ ] `ruff` + `pyright` configured and clean.
+- [x] `pyproject.toml` committed.
+- [x] `ai-research --help` works after `uv tool install -e .`.
+- [x] `ruff` + `pyright` configured and clean.
 
 **Dependencies**: None.
 **Risk Level**: Low
