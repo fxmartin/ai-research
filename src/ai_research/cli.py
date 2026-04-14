@@ -22,7 +22,9 @@ from ai_research.extract.pdf import (
     PdftotextNotFoundError,
     extract_pdf,
 )
+from ai_research.scan import DEFAULT_MIN_AGE_SECONDS, scan_raw
 from ai_research.search import run_search
+from ai_research.state import load_state
 
 app = typer.Typer(
     name="ai-research",
@@ -115,6 +117,53 @@ def search(
         typer.echo(str(exc), err=True)
         raise typer.Exit(code=1) from exc
     typer.echo(json.dumps([h.to_dict() for h in hits]))
+
+
+@app.command("scan")
+def scan(
+    raw_dir: Path = typer.Argument(  # noqa: B008
+        ...,
+        help="Path to the raw/ inbox directory to scan.",
+    ),
+    min_age_seconds: float = typer.Option(  # noqa: B008
+        DEFAULT_MIN_AGE_SECONDS,
+        "--min-age-seconds",
+        help="Skip files whose mtime is newer than this many seconds.",
+    ),
+    skip_known: bool = typer.Option(  # noqa: B008
+        False,
+        "--skip-known",
+        help="Exclude files whose SHA-256 already appears in state.json sources.",
+    ),
+    state_file: Path = typer.Option(  # noqa: B008
+        Path(".ai-research/state.json"),
+        "--state-file",
+        help="Path to state.json used for --skip-known lookups.",
+    ),
+    as_json: bool = typer.Option(  # noqa: B008
+        False,
+        "--json",
+        help="Emit results as a JSON array instead of one path per line.",
+    ),
+) -> None:
+    """List files in ``raw_dir`` that are eligible for ingest."""
+    state = load_state(state_file) if skip_known else None
+    try:
+        results = scan_raw(
+            raw_dir,
+            min_age_seconds=min_age_seconds,
+            skip_known=skip_known,
+            state=state,
+        )
+    except FileNotFoundError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=2) from exc
+
+    if as_json:
+        typer.echo(json.dumps(results))
+    else:
+        for path in results:
+            typer.echo(path)
 
 
 if __name__ == "__main__":  # pragma: no cover
