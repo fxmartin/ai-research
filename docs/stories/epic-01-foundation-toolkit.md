@@ -216,7 +216,7 @@
 
 ## Epic Progress
 
-- [ ] Story 01.1-001 (2 pts)
+- [x] Story 01.1-001 (2 pts)
 - [ ] Story 01.1-002 (3 pts)
 - [ ] Story 01.2-001 (2 pts)
 - [ ] Story 01.2-002 (3 pts)
@@ -226,4 +226,4 @@
 - [ ] Story 01.3-002 (2 pts)
 - [ ] Story 01.3-003 (2 pts)
 
-**Completed**: 0 / 9 stories · 0 / 19 pts.
+**Completed**: 1 / 9 stories · 2 / 19 pts.
