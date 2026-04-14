@@ -81,8 +81,8 @@
 **Technical Notes**: Command shells out to `ai-research scan raw/ --json` then loops calling the Python verbs directly — NOT re-invoking `/ingest` per file (that would re-enter a slash command, which is expensive). The drafting step for each file still happens in the same Claude Code turn.
 
 **Definition of Done**:
-- [ ] `.claude/commands/ingest-inbox.md` committed.
-- [ ] Headless smoke: `claude -p "/ingest-inbox"` against a fixture `raw/`.
+- [x] `.claude/commands/ingest-inbox.md` committed.
+- [x] Headless smoke: `claude -p "/ingest-inbox"` against a fixture `raw/`.
 
 **Dependencies**: 03.1-001, 01.3-001
 **Risk Level**: Medium
@@ -148,8 +148,9 @@
 **Technical Notes**: A small post-processor (in the Python toolkit: `ai-research validate-citations --json <answer.json>`) the slash command or a wrapper can call.
 
 **Definition of Done**:
-- [ ] `validate-citations` verb in toolkit.
-- [ ] Harness test uses it.
+- [x] `ask-check` verb in toolkit (`ai-research ask-check --json <file> | --stdin`).
+- [x] Python helper: `ai_research.wiki.ask.check_citations`.
+- [x] Unit tests: valid, missing page, wikilink edge cases, empty citations, malformed payload.
 
 **Dependencies**: 03.3-001
 **Risk Level**: Medium
@@ -160,9 +161,9 @@
 
 - [x] Story 03.1-001 (5 pts)
 - [x] Story 03.1-002 (2 pts)
-- [ ] Story 03.2-001 (3 pts)
+- [x] Story 03.2-001 (3 pts)
 - [ ] Story 03.2-002 (1 pt)
 - [x] Story 03.3-001 (5 pts)
-- [ ] Story 03.3-002 (1 pt)
+- [x] Story 03.3-002 (1 pt)
 
-**Completed**: 3 / 6 stories · 12 / 17 pts.
+**Completed**: 5 / 6 stories · 16 / 17 pts.

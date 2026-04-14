@@ -27,6 +27,7 @@ from ai_research.extract import (
 from ai_research.scan import DEFAULT_MIN_AGE_SECONDS, scan_raw
 from ai_research.search import run_search
 from ai_research.state import load_state
+from ai_research.wiki.ask import AskPayloadError, check_citations
 from ai_research.wiki.index_rebuild import rebuild_index as rebuild_index_impl
 from ai_research.wiki.materialize import MaterializeStatus
 from ai_research.wiki.materialize import materialize as materialize_page
@@ -291,6 +292,59 @@ def index_rebuild(
         typer.echo(str(exc), err=True)
         raise typer.Exit(code=2) from exc
     typer.echo(f"indexed {len(entries)} page(s) -> {index_file}")
+
+
+@app.command("ask-check")
+def ask_check(
+    json_path: Path | None = typer.Option(  # noqa: B008
+        None,
+        "--json",
+        help="Path to an /ask JSON payload file. Mutually exclusive with --stdin.",
+    ),
+    read_stdin: bool = typer.Option(  # noqa: B008
+        False,
+        "--stdin",
+        help="Read the /ask JSON payload from stdin instead of a file.",
+    ),
+    wiki_dir: Path = typer.Option(  # noqa: B008
+        Path("wiki"),
+        "--wiki-dir",
+        help="Root of the wiki vault to resolve citations against.",
+    ),
+) -> None:
+    """Verify every citation in an ``/ask`` JSON payload resolves to a vault page.
+
+    Exit code ``0`` means every citation resolved. Exit code ``1`` means one
+    or more citations are broken (the JSON result is still emitted on stdout
+    for tooling). Exit code ``2`` covers usage errors: missing input, invalid
+    JSON, malformed payload schema, or missing wiki directory.
+    """
+    if json_path is None and not read_stdin:
+        typer.echo("ask-check: provide --json <payload.json> or --stdin.", err=True)
+        raise typer.Exit(code=2)
+    if json_path is not None and read_stdin:
+        typer.echo("ask-check: --json and --stdin are mutually exclusive.", err=True)
+        raise typer.Exit(code=2)
+
+    raw = sys.stdin.read() if read_stdin else json_path.read_text(encoding="utf-8")  # type: ignore[union-attr]
+    try:
+        payload = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        typer.echo(f"ask-check: invalid JSON: {exc}", err=True)
+        raise typer.Exit(code=2) from exc
+
+    try:
+        result = check_citations(payload, wiki_dir=wiki_dir)
+    except AskPayloadError as exc:
+        typer.echo(f"ask-check: {exc}", err=True)
+        raise typer.Exit(code=2) from exc
+    except FileNotFoundError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=2) from exc
+
+    typer.echo(json.dumps(result.to_dict()))
+    if not result.ok:
+        raise typer.Exit(code=1)
 
 
 if __name__ == "__main__":  # pragma: no cover
