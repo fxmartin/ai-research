@@ -33,8 +33,8 @@
 **Technical Notes**: Use `syrupy` or a tiny custom helper. Fixtures under `tests/fixtures/`.
 
 **Definition of Done**:
-- [ ] `pytest` passes locally.
-- [ ] Golden harness documented in `CONTRIBUTING.md` or README.
+- [x] `pytest` passes locally.
+- [x] Golden harness documented in `CONTRIBUTING.md` or README.
 
 **Dependencies**: 01.1-001
 **Risk Level**: Low
@@ -135,10 +135,10 @@
 
 ## Epic Progress
 
-- [ ] Story 04.1-001 (3 pts)
+- [x] Story 04.1-001 (3 pts)
 - [ ] Story 04.1-002 (3 pts)
 - [ ] Story 04.2-001 (3 pts)
 - [ ] Story 04.3-001 (1 pt)
 - [ ] Story 04.3-002 (1 pt)
 
-**Completed**: 0 / 5 stories · 0 / 11 pts.
+**Completed**: 1 / 5 stories · 3 / 11 pts.

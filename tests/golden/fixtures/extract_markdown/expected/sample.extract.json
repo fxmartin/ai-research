@@ -1,0 +1,15 @@
+{
+  "metadata": {
+    "frontmatter": {
+      "tags": [
+        "golden",
+        "fixture"
+      ],
+      "title": "Golden Sample"
+    },
+    "path": "<FIXTURE>/sample.md",
+    "sha256": "436f156a32dd7741e439604b2b68748a1b177260b7378d50c681e6e725d52a2f",
+    "source_type": "markdown"
+  },
+  "text": "---\ntitle: Golden Sample\ntags:\n  - golden\n  - fixture\n---\n# Golden Sample\n\nThis is a fixture file for the extract-markdown golden test.\n\nIt has two paragraphs.\n"
+}
