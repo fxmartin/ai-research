@@ -54,7 +54,9 @@ v1 is **Anthropic-only** (Claude). Use prompt caching on system prompts and stab
 ## Storage Layout
 
 ```
-sources/          # immutable raw inputs (PDF, URL-snapshot, .md, transcript)
+raw/              # INBOX — drop new files here; watcher drains to sources/
+sources/          # immutable archive (PDF, URL-snapshot, .md, transcript)
+  <yyyy>/<mm>/<hash>-<slug>.<ext>
 wiki/             # Obsidian-compatible markdown pages (wikilinks + frontmatter)
   concepts/       # stub pages for cross-referenced concepts
   _contradictions.md  # Phase 2: index of flagged contradictions
@@ -62,9 +64,15 @@ wiki/             # Obsidian-compatible markdown pages (wikilinks + frontmatter)
   schema.toml     # wiki structure & page templates
   state.json      # source hashes, page→source index
   cost.log        # per-command token + USD log
+.claude/
+  commands/ingest-inbox.md  # /ingest-inbox slash command for /loop orchestration
 ```
 
 The vault under `wiki/` must remain openable as a pure Obsidian vault with zero tooling.
+
+## Inbox Watcher (v1)
+
+v1 uses **Claude Code `/loop` + the project-scoped `/ingest-inbox` command** instead of a daemon. The command lists `raw/`, calls `ai-research ingest` per file, and on success moves each file to `sources/<yyyy>/<mm>/<hash>-<slug>.<ext>`. Auto-ingest only runs while a Claude Code session is open — accepted v1 tradeoff. A launchd agent is a P2 option.
 
 ## Testing Strategy
 

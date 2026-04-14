@@ -52,21 +52,28 @@ Jobs-to-be-done:
 
 ## 4. Solution Overview
 
-**Approach.** CLI tool that maintains three directories on local disk:
+**Approach.** CLI tool that maintains four directories on local disk:
 
 ```
-sources/   # immutable raw inputs (PDFs, URLs, .md, transcripts)
+raw/       # INBOX — drop new files here; watcher picks them up
+sources/   # immutable archive of ingested inputs (PDFs, URL snapshots, .md, transcripts)
 wiki/      # LLM-generated, Obsidian-compatible markdown pages
 .ai-research/
   schema.toml      # wiki structure & page templates
-  state.json       # source hashes, page→source index, cost log
+  state.json       # source hashes, page→source index
+  cost.log         # per-command token + USD log
 ```
 
+**Ingestion flow.** User drops a file (or a URL `.txt` pointer) into `raw/`. The watcher picks it up, runs `ai-research ingest <path>`, and on success moves the file to `sources/<yyyy>/<mm>/<hash>-<slug>.<ext>`. `sources/` is append-only; `raw/` drains to empty between ticks.
+
+**Orchestration: Claude Code `/loop` is the v1 watcher.** Rather than build a launchd agent or fswatch daemon, v1 leverages Claude Code's `/loop` skill in dynamic-pacing mode to periodically scan `raw/`, call the `ingest` CLI for each new file, and report results. A project-scoped slash command `.claude/commands/ingest-inbox.md` encapsulates the "scan raw/ → ingest each → move to sources/ → summarize" routine so it can be invoked manually or on a loop. **Implication:** auto-ingest only runs while a Claude Code session is open on this repo; this is accepted v1 behavior for a solo workflow. A background launchd agent is a P2 option if FX wants overnight ingestion.
+
 **Core capabilities (v1):**
-1. `ingest` — ingest a source, produce/update a wiki page.
+1. `ingest` — ingest a source from a path or URL, produce/update a wiki page.
 2. Auto cross-linking — detect concepts, emit `[[wikilinks]]`, create stub pages.
 3. `ask` — Q&A over the wiki (not raw sources) with citations back to pages.
 4. Contradiction detection — flag claims that disagree with existing pages; maintain `wiki/_contradictions.md`.
+5. Inbox watcher via `/loop` + `/ingest-inbox` slash command.
 
 **Out of scope for v1:**
 - Multi-user / collaboration / auth / sharing.
@@ -112,6 +119,8 @@ CLI (Typer)
 | P0-6 | Token + USD cost printed per command and appended to `.ai-research/cost.log`. |
 | P0-7 | Vault opens cleanly in Obsidian: all wikilinks resolve OR point to stubs; frontmatter parses; graph view renders. |
 | P0-8 | Anthropic provider with prompt caching enabled on system prompts and stable wiki context. |
+| P0-9 | `raw/` inbox directory exists; `ai-research ingest` accepts a file from `raw/` and on success moves it to `sources/<yyyy>/<mm>/<hash>-<slug>.<ext>`. `raw/` is drained to empty after a successful pass. |
+| P0-10 | Project-scoped slash command `.claude/commands/ingest-inbox.md` implements: list `raw/` → ingest each → move to `sources/` → print a per-file result + cumulative cost. Invokable directly or via `/loop`. |
 
 ### P1 — Should have (Phase 2, weeks 2–4)
 
@@ -127,7 +136,8 @@ CLI (Typer)
 - OpenAI + Ollama providers behind abstraction.
 - Web UI via the already-declared FastAPI dep.
 - Graph-based retrieval (traverse wikilinks) for `ask`.
-- RSS / folder watch for auto-ingest.
+- RSS / URL-feed auto-ingest.
+- Background inbox watcher (launchd agent or `fswatch`-based daemon) so `raw/` drains without a Claude Code session open.
 
 ### Non-functional requirements
 
@@ -203,6 +213,8 @@ Repo is live. Add: `pyproject.toml` via `uv`, Typer CLI skeleton, Anthropic clie
 | Q&A premise fails — retrieving wiki pages is worse than RAG over sources | High | Phase 1 includes a manual A/B check: same 10 questions answered (a) by wiki pages only, (b) by raw-source RAG. If (a) loses decisively, pivot to hybrid. |
 | Obsidian format drift (wikilink edge cases, callout syntax) | Low | Golden-file tests against a fixture vault; CI opens vault via obsidian-md-filter or equivalent linter. |
 | Solo project — motivation decay | Medium | Primary KPI is weekly use; if FX stops using it within a month, kill the project instead of over-investing. |
+| `/loop`-based watcher only runs while Claude Code session is open → `raw/` can sit undrained | Low | Accepted v1 behavior (solo workflow, user opens Claude Code daily). Escape hatch: manual `/ingest-inbox` call; P2 launchd agent if it actually bites. |
+| `raw/` drop + concurrent `/loop` tick could double-process a partial file | Low | Skip files whose mtime is < 5s old; compute `source_hash` over fully-read bytes; idempotent re-ingest (P0-5) neutralizes the rare duplicate. |
 
 ---
 
