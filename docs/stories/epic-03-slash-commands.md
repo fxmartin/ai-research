@@ -127,9 +127,9 @@
 **Technical Notes**: The slash command prose should explicitly pin the JSON schema ("When asked for JSON, return EXACTLY these keys"). This is the most drift-sensitive command — add a harness test.
 
 **Definition of Done**:
-- [ ] `.claude/commands/ask.md` committed.
-- [ ] JSON contract validated by a test that runs `claude -p` and validates with a Pydantic model.
-- [ ] Interactive smoke on fixture vault passes.
+- [x] `.claude/commands/ask.md` committed.
+- [x] JSON contract validated by a test that runs `claude -p` and validates with a Pydantic model.
+- [x] Interactive smoke on fixture vault passes.
 
 **Dependencies**: Epic-02, 01.3-002
 **Risk Level**: High — pinning JSON across model updates; confidence calibration is subjective.
@@ -162,7 +162,7 @@
 - [x] Story 03.1-002 (2 pts)
 - [ ] Story 03.2-001 (3 pts)
 - [ ] Story 03.2-002 (1 pt)
-- [ ] Story 03.3-001 (5 pts)
+- [x] Story 03.3-001 (5 pts)
 - [ ] Story 03.3-002 (1 pt)
 
-**Completed**: 2 / 6 stories · 7 / 17 pts.
+**Completed**: 3 / 6 stories · 12 / 17 pts.
