@@ -195,7 +195,7 @@ Full detail in [`docs/STORIES.md`](docs/STORIES.md) and [`REQUIREMENTS.md`](REQU
 
 ## License
 
-TBD (private repo; personal project).
+[MIT](LICENSE) © 2026 FX Martin.
 
 ## Acknowledgements
 
