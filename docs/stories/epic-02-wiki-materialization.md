@@ -153,9 +153,9 @@
 
 - [x] Story 02.1-001 (3 pts)
 - [ ] Story 02.1-002 (3 pts)
-- [ ] Story 02.1-003 (2 pts)
+- [x] Story 02.1-003 (2 pts)
 - [x] Story 02.2-001 (3 pts)
 - [ ] Story 02.2-002 (2 pts)
 - [ ] Story 02.2-003 (3 pts)
 
-**Completed**: 2 / 6 stories · 6 / 16 pts.
+**Completed**: 3 / 6 stories · 8 / 16 pts.
