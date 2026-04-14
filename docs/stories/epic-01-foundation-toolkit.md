@@ -218,7 +218,7 @@
 
 - [x] Story 01.1-001 (2 pts)
 - [ ] Story 01.1-002 (3 pts)
-- [ ] Story 01.2-001 (2 pts)
+- [x] Story 01.2-001 (2 pts)
 - [ ] Story 01.2-002 (3 pts)
 - [x] Story 01.2-003 (1 pt)
 - [ ] Story 01.2-004 (2 pts)
@@ -226,4 +226,4 @@
 - [ ] Story 01.3-002 (2 pts)
 - [ ] Story 01.3-003 (2 pts)
 
-**Completed**: 2 / 9 stories · 3 / 19 pts.
+**Completed**: 3 / 9 stories · 5 / 19 pts.
