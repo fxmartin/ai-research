@@ -2,7 +2,7 @@
 
 A local, Claude Code-native implementation of Karpathy's [LLM-Wiki pattern](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f): an LLM incrementally builds and maintains an interconnected, Obsidian-compatible markdown vault from your raw sources so knowledge compounds instead of being re-derived.
 
-> **Status:** pre-alpha. Requirements and backlog are defined; implementation begins at Story 01.1-001. See [`docs/STORIES.md`](docs/STORIES.md) for progress.
+> **Status:** pre-alpha. Foundation has landed (Story 01.1-001 done: `pyproject.toml`, Typer CLI skeleton, CI); Epic-01's remaining 8 stories are next. See [`docs/STORIES.md`](docs/STORIES.md) for progress.
 
 ---
 
@@ -163,6 +163,7 @@ ai-research/
 ```bash
 uv sync                    # install dev dependencies
 uv run pytest              # unit + golden-file tests
+uv run pytest --cov        # run tests with coverage reporting (threshold: 80%)
 uv run pytest -m slow      # include the /ask JSON-contract harness (requires claude CLI)
 uv run ruff check .
 uv run pyright

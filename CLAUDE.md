@@ -9,7 +9,7 @@
 - **Language**: Python 3.12+
 - **Package/Project manager**: uv
 - **Framework**: FastAPI (for any future API surface)
-- **CLI**: Typer/Click (TBD in `/brainstorm`)
+- **CLI**: Typer (entry point: `ai-research`)
 
 ## Architecture
 
@@ -93,6 +93,8 @@ Two-stage, no vector DB in v1:
 Embeddings and graph-walk expansion (follow `[[wikilinks]]` 1–2 hops) are P2.
 
 ## Testing Strategy
+
+Tooling is wired and active: **pytest** (test runner), **pytest-cov** (coverage, 80% threshold), **ruff** (lint/format), **pyright** (type-check). All run in CI via `.github/workflows/ci.yml` on push/PR.
 
 - **Unit**: Python toolkit verbs — frontmatter parse, atomic write, idempotency hashing, `extract` adapters, `search` rg wrapper, `index-rebuild`.
 - **Golden-file**: fixture vault; running the toolkit verbs against recorded inputs produces byte-identical output (except timestamps).
