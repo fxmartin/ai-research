@@ -56,8 +56,8 @@
 **Technical Notes**: `tomllib` (stdlib) + `tomli-w` for write. `state.py` module exports `load_state`, `save_state`, `atomic_write`.
 
 **Definition of Done**:
-- [ ] Unit tests cover missing file, valid file, corrupt file, concurrent write.
-- [ ] `atomic_write` tested with a deliberate crash between temp write and rename.
+- [x] Unit tests cover missing file, valid file, corrupt file, concurrent write.
+- [x] `atomic_write` tested with a deliberate crash between temp write and rename.
 
 **Dependencies**: 01.1-001
 **Risk Level**: Low
@@ -217,7 +217,7 @@
 ## Epic Progress
 
 - [x] Story 01.1-001 (2 pts)
-- [ ] Story 01.1-002 (3 pts)
+- [x] Story 01.1-002 (3 pts)
 - [x] Story 01.2-001 (2 pts)
 - [ ] Story 01.2-002 (3 pts)
 - [x] Story 01.2-003 (1 pt)
@@ -226,4 +226,4 @@
 - [x] Story 01.3-002 (2 pts)
 - [ ] Story 01.3-003 (2 pts)
 
-**Completed**: 4 / 9 stories · 7 / 19 pts.
+**Completed**: 5 / 9 stories · 10 / 19 pts.
