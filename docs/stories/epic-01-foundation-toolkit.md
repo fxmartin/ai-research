@@ -207,7 +207,7 @@
 **Technical Notes**: `shutil.move` within the same filesystem; slug generation from metadata.title (fall back to filename).
 
 **Definition of Done**:
-- [ ] Unit tests for fresh, duplicate, collision cases.
+- [x] Unit tests for fresh, duplicate, collision cases.
 
 **Dependencies**: 01.1-002
 **Risk Level**: Low
@@ -224,6 +224,6 @@
 - [ ] Story 01.2-004 (2 pts)
 - [x] Story 01.3-001 (2 pts)
 - [x] Story 01.3-002 (2 pts)
-- [ ] Story 01.3-003 (2 pts)
+- [x] Story 01.3-003 (2 pts)
 
 **Completed**: 6 / 9 stories · 12 / 19 pts.
