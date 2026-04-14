@@ -30,6 +30,7 @@ from ai_research.state import load_state
 from ai_research.wiki.index_rebuild import rebuild_index as rebuild_index_impl
 from ai_research.wiki.materialize import MaterializeStatus
 from ai_research.wiki.materialize import materialize as materialize_page
+from ai_research.wiki.stubs import create_stub
 
 app = typer.Typer(
     name="ai-research",
@@ -165,8 +166,8 @@ def scan(
 
 @app.command("materialize")
 def materialize(
-    source: Path = typer.Option(  # noqa: B008
-        ...,
+    source: Path | None = typer.Option(  # noqa: B008
+        None,
         "--source",
         help="Path to the archived source file (used for source_hash + frontmatter).",
     ),
@@ -200,8 +201,29 @@ def materialize(
         "--force",
         help="Rewrite even when the page is locked or the source_hash is unchanged.",
     ),
+    stubs: list[str] = typer.Option(  # noqa: B008
+        [],
+        "--stub",
+        help=(
+            "Create a concept stub at wiki/concepts/<slug>.md for the given "
+            "name. Repeatable. Mutually exclusive with --source/--from/--stdin."
+        ),
+    ),
 ) -> None:
-    """Write ``wiki/<slug>.md`` from a draft, atomically, with frontmatter."""
+    """Write ``wiki/<slug>.md`` from a draft, atomically, with frontmatter.
+
+    With one or more ``--stub NAME`` flags, create concept stubs instead of
+    materializing a full page (Story 02.1-003).
+    """
+    if stubs:
+        for name in stubs:
+            stub_path = create_stub(name, wiki_dir=wiki_dir)
+            typer.echo(str(stub_path))
+        return
+
+    if source is None:
+        typer.echo("materialize: --source is required unless --stub is used.", err=True)
+        raise typer.Exit(code=2)
     if draft is None and not read_stdin:
         typer.echo(
             "materialize: provide --from <draft.md> or --stdin to supply the draft body.",
