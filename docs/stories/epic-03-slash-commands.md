@@ -55,7 +55,7 @@
 **Technical Notes**: The slash command reads the template and includes it in Claude's drafting context. No LLM call in Python; just data plumbing.
 
 **Definition of Done**:
-- [ ] Default `schema.toml` committed with sensible sections.
+- [x] Default `schema.toml` committed with sensible sections.
 - [ ] Template override honored by `/ingest` interactively and headless.
 
 **Dependencies**: 01.1-002
@@ -159,7 +159,7 @@
 ## Epic Progress
 
 - [ ] Story 03.1-001 (5 pts)
-- [ ] Story 03.1-002 (2 pts)
+- [~] Story 03.1-002 (2 pts) — schema + loader landed; `/ingest` wiring pending 03.1-001
 - [ ] Story 03.2-001 (3 pts)
 - [ ] Story 03.2-002 (1 pt)
 - [ ] Story 03.3-001 (5 pts)
