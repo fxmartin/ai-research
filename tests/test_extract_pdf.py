@@ -88,3 +88,32 @@ def test_cli_extract_pdf_missing_binary_message(tmp_path: Path) -> None:
     assert result.exit_code != 0
     combined = (result.stdout or "") + (result.stderr or "")
     assert "brew install poppler" in combined
+
+
+# ---------------------------------------------------------------------------
+# Coverage gap tests — added by QA gate (Story 01.2-001)
+# ---------------------------------------------------------------------------
+
+from ai_research.extract.pdf import _count_pages
+
+
+def test_count_pages_empty_text_returns_zero() -> None:
+    """_count_pages("") must return 0 — covers the early-return branch."""
+    assert _count_pages("") == 0
+
+
+def test_count_pages_single_page_no_formfeed_returns_one() -> None:
+    """Single page with no \\f delimiter must return 1."""
+    assert _count_pages("Hello, world.") == 1
+
+
+def test_count_pages_multi_page_returns_formfeed_count() -> None:
+    """Three form-feeds from pdftotext means three pages."""
+    assert _count_pages("page1\fpage2\fpage3\f") == 3
+
+
+def test_cli_version_prints_version() -> None:
+    """The `version` sub-command must print a non-empty version string."""
+    result = runner.invoke(app, ["version"])
+    assert result.exit_code == 0
+    assert result.stdout.strip() != ""
