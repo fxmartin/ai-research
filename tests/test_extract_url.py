@@ -17,9 +17,9 @@ from typer.testing import CliRunner
 from ai_research.cli import app
 from ai_research.extract.url import (
     UrlExtractionError,
-    _Resp,
     _fetch,
     _is_pdf_response,
+    _Resp,
     extract_url,
 )
 
@@ -224,14 +224,13 @@ def test_is_pdf_response_no_headers() -> None:
     assert _is_pdf_response(r, "https://example.com/x") is False
 
 
-
-
 def test_is_pdf_response_skips_non_content_type_headers() -> None:
     """_is_pdf_response iterates all headers; non-Content-Type keys are skipped."""
     # First header is not content-type — exercises the loop-continue branch.
     headers = {"X-Request-Id": "abc123", "Content-Type": "application/pdf"}
     resp = _FakeResponse(b"data", headers=headers)
     assert _is_pdf_response(resp, "https://example.com/x") is True
+
 
 # ---------------------------------------------------------------------------
 # _fetch — unit tests exercising the trafilatura download adapters
@@ -276,21 +275,6 @@ def test_fetch_normalises_resp_using_content_attr_fallback() -> None:
 def test_fetch_fallback_when_fetch_response_unavailable() -> None:
     """_fetch uses trafilatura.fetch_url when fetch_response import fails."""
     html_str = SAMPLE_HTML.decode("utf-8")
-
-    # Simulate the ImportError branch by patching fetch_response to raise ImportError
-    # on import and falling through to the fetch_url fallback.
-    original_import = __builtins__.__import__ if hasattr(__builtins__, "__import__") else __import__
-
-    def mock_import(name, *args, **kwargs):
-        if name == "trafilatura.downloads":
-            raise ImportError("simulated old trafilatura")
-        return original_import(name, *args, **kwargs)
-
-    with patch("trafilatura.fetch_url", return_value=html_str) as mock_fetch_url:
-        # Patch fetch_response to not exist so the fallback path activates.
-        # We achieve this by patching the symbol directly in the url module.
-        with patch("ai_research.extract.url._fetch") as _:
-            pass  # just to confirm the module is importable
 
     # Direct approach: test the fallback by patching the import inside _fetch.
     with patch.dict("sys.modules", {"trafilatura.downloads": None}):
