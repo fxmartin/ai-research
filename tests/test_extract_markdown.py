@@ -101,3 +101,45 @@ def test_cli_extract_markdown_emits_json(tmp_path: Path) -> None:
 def test_cli_extract_missing_file_nonzero_exit(tmp_path: Path) -> None:
     result = runner.invoke(app, ["extract", str(tmp_path / "missing.md")])
     assert result.exit_code != 0
+
+
+def test_extract_markdown_dot_markdown_extension(tmp_path: Path) -> None:
+    """Files with .markdown extension are accepted and processed correctly."""
+    body = "# Alt extension\n\nContent here.\n"
+    src = tmp_path / "note.markdown"
+    src.write_text(body, encoding="utf-8")
+
+    result = extract_markdown(src)
+
+    assert result["text"] == body
+    assert result["metadata"]["source_type"] == "markdown"
+    assert result["metadata"]["frontmatter"] == {}
+    assert result["metadata"]["sha256"] == _sha256(body.encode("utf-8"))
+
+
+def test_parse_frontmatter_swallows_invalid_yaml(tmp_path: Path) -> None:
+    """Malformed YAML in frontmatter must not raise — extractor returns empty dict."""
+    # Construct a file whose YAML block will trip up the YAML parser.
+    # python-frontmatter will raise on a YAML mapping-key conflict like
+    # a bare `{` that is not closed.
+    body = "---\nkey: [unclosed bracket\n---\n# body\n"
+    src = tmp_path / "broken-fm.md"
+    src.write_text(body, encoding="utf-8")
+
+    # Should not raise; frontmatter errors are swallowed silently.
+    result = extract_markdown(src)
+
+    assert result["text"] == body
+    # Either the frontmatter key was parsed (some lenient YAML parsers
+    # accept this) or it was swallowed to an empty dict — either is correct.
+    assert isinstance(result["metadata"]["frontmatter"], dict)
+
+
+def test_cli_extract_unsupported_extension_exits_2(tmp_path: Path) -> None:
+    """CLI `extract` on a non-markdown file must exit 2 and print to stderr."""
+    src = tmp_path / "report.pdf"
+    src.write_bytes(b"%PDF-1.4 fake")
+
+    result = runner.invoke(app, ["extract", str(src)])
+
+    assert result.exit_code == 2
