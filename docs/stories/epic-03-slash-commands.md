@@ -103,7 +103,7 @@
 **Definition of Done**:
 - [x] Checklist added to README.
 - [x] `TestLoopCompat` contract tests guard the /loop spec in `tests/test_slash_commands.py`.
-- [ ] One-pass manual smoke test recorded.
+- [x] One-pass manual smoke test recorded.
 
 **Dependencies**: 03.2-001
 **Risk Level**: Low
