@@ -27,6 +27,7 @@ from ai_research.extract import (
 from ai_research.scan import DEFAULT_MIN_AGE_SECONDS, scan_raw
 from ai_research.search import run_search
 from ai_research.state import load_state
+from ai_research.wiki.index_rebuild import rebuild_index as rebuild_index_impl
 from ai_research.wiki.materialize import materialize as materialize_page
 
 app = typer.Typer(
@@ -210,6 +211,28 @@ def materialize(
         raise typer.Exit(code=1) from exc
 
     typer.echo(str(result.page_path))
+
+
+@app.command("index-rebuild")
+def index_rebuild(
+    wiki_dir: Path = typer.Option(  # noqa: B008
+        Path("wiki"),
+        "--wiki-dir",
+        help="Root of the wiki vault to index.",
+    ),
+    index_file: Path = typer.Option(  # noqa: B008
+        Path(".ai-research/index.md"),
+        "--index-file",
+        help="Path to write the regenerated one-line-per-page index.",
+    ),
+) -> None:
+    """Regenerate ``.ai-research/index.md`` from the wiki vault."""
+    try:
+        entries = rebuild_index_impl(wiki_dir=wiki_dir, index_path=index_file)
+    except FileNotFoundError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=2) from exc
+    typer.echo(f"indexed {len(entries)} page(s) -> {index_file}")
 
 
 if __name__ == "__main__":  # pragma: no cover
