@@ -34,8 +34,8 @@
 **Technical Notes**: Slug from frontmatter `title` or filename. Frontmatter via `python-frontmatter` or hand-rolled YAML emitter.
 
 **Definition of Done**:
-- [ ] Unit tests cover frontmatter shape, atomic write, state update.
-- [ ] Crash-mid-write test (kill between temp write and rename).
+- [x] Unit tests cover frontmatter shape, atomic write, state update.
+- [x] Crash-mid-write test (kill between temp write and rename).
 
 **Dependencies**: 01.1-002, 01.3-003
 **Risk Level**: Medium — crash-safety is easy to get wrong.
@@ -151,11 +151,11 @@
 
 ## Epic Progress
 
-- [ ] Story 02.1-001 (3 pts)
+- [x] Story 02.1-001 (3 pts)
 - [ ] Story 02.1-002 (3 pts)
 - [ ] Story 02.1-003 (2 pts)
 - [ ] Story 02.2-001 (3 pts)
 - [ ] Story 02.2-002 (2 pts)
 - [ ] Story 02.2-003 (3 pts)
 
-**Completed**: 0 / 6 stories · 0 / 16 pts.
+**Completed**: 1 / 6 stories · 3 / 16 pts.
