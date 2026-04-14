@@ -137,8 +137,8 @@ def test_parse_frontmatter_swallows_invalid_yaml(tmp_path: Path) -> None:
 
 def test_cli_extract_unsupported_extension_exits_2(tmp_path: Path) -> None:
     """CLI `extract` on a non-markdown file must exit 2 and print to stderr."""
-    src = tmp_path / "report.pdf"
-    src.write_bytes(b"%PDF-1.4 fake")
+    src = tmp_path / "report.csv"
+    src.write_bytes(b"col1,col2\nval1,val2")
 
     result = runner.invoke(app, ["extract", str(src)])
 
