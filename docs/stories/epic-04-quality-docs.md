@@ -105,7 +105,7 @@
 **Technical Notes**: `uv` in CI via `astral-sh/setup-uv`. Matrix: Python 3.12 only in v1.
 
 **Definition of Done**:
-- [ ] `.github/workflows/ci.yml` committed.
+- [x] `.github/workflows/ci.yml` committed.
 - [ ] Status badge in README.
 
 **Dependencies**: 04.1-001, 04.2-001
@@ -138,7 +138,7 @@
 - [x] Story 04.1-001 (3 pts)
 - [x] Story 04.1-002 (3 pts)
 - [x] Story 04.2-001 (3 pts)
-- [ ] Story 04.3-001 (1 pt)
+- [x] Story 04.3-001 (1 pt)
 - [ ] Story 04.3-002 (1 pt)
 
-**Completed**: 3 / 5 stories · 9 / 11 pts.
+**Completed**: 4 / 5 stories · 10 / 11 pts.
