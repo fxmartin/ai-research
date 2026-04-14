@@ -201,6 +201,16 @@ def materialize(
         "--force",
         help="Rewrite even when the page is locked or the source_hash is unchanged.",
     ),
+    index_file: Path = typer.Option(  # noqa: B008
+        Path(".ai-research/index.md"),
+        "--index-file",
+        help="Path to the retrieval index; rebuilt after CREATED/UPDATED writes.",
+    ),
+    skip_index: bool = typer.Option(  # noqa: B008
+        False,
+        "--skip-index",
+        help="Do not auto-rebuild the index (use for bulk runs; rebuild once at the end).",
+    ),
     stubs: list[str] = typer.Option(  # noqa: B008
         [],
         "--stub",
@@ -240,6 +250,8 @@ def materialize(
             stdin=sys.stdin if read_stdin else None,
             source_url=source_url,
             force=force,
+            index_path=index_file,
+            skip_index=skip_index,
         )
     except FileNotFoundError as exc:
         typer.echo(str(exc), err=True)

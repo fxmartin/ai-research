@@ -38,6 +38,7 @@ import frontmatter
 
 from ai_research.archive import slugify
 from ai_research.state import State, atomic_write, load_state, save_state
+from ai_research.wiki.index_rebuild import rebuild_index
 from ai_research.wiki.sources import SourceEntry, merge_sources_section
 from ai_research.wiki.stubs import create_stubs_for_body
 
@@ -132,6 +133,8 @@ def materialize(  # noqa: PLR0913 — CLI-shaped keyword API, not hot path.
     stdin: TextIO | None = None,
     source_url: str | None = None,
     force: bool = False,
+    index_path: Path | None = None,
+    skip_index: bool = False,
 ) -> MaterializeResult:
     """Write ``wiki/<slug>.md`` from a draft and record state, idempotently.
 
@@ -148,6 +151,12 @@ def materialize(  # noqa: PLR0913 — CLI-shaped keyword API, not hot path.
         source_url: Original URL for web sources; recorded in the ## Sources section.
         force: Bypass ``locked: true`` and always rewrite, even when the
             ``source_hash`` is unchanged.
+        index_path: If provided, rebuild this index file after a successful
+            CREATED or UPDATED write (Story 02.2-002). SKIPPED/LOCKED never
+            trigger a rebuild. No-op when ``skip_index`` is True or
+            ``index_path`` is None.
+        skip_index: Opt-out switch for bulk callers — suppress the auto
+            index rebuild even when ``index_path`` is set.
 
     Returns:
         :class:`MaterializeResult` with the final page path, source hash,
@@ -268,6 +277,11 @@ def materialize(  # noqa: PLR0913 — CLI-shaped keyword API, not hot path.
     state.pages[rel_page] = existing_hashes
     save_state(state_path, state)
 
+    # Auto-trigger index rebuild on CREATED/UPDATED (Story 02.2-002).
+    # SKIPPED/LOCKED return earlier so we never reach here for those.
+    if index_path is not None and not skip_index:
+        rebuild_index(wiki_dir=Path(wiki_dir), index_path=Path(index_path))
+
     return MaterializeResult(
         page_path=page_path,
         source_hash=source_hash,
@@ -283,6 +297,7 @@ def _split_body_for_sources(body: str) -> tuple[str, list[str]]:
     for preservation during re-materialization. Delegates to sources module.
     """
     from ai_research.wiki.sources import _split_body
+
     return _split_body(body)
 
 
@@ -292,6 +307,7 @@ def _parse_entry(line: str) -> SourceEntry | None:
     Helper for materialize to parse existing sources for preservation.
     """
     from ai_research.wiki.sources import _parse_entry as sources_parse_entry
+
     return sources_parse_entry(line)
 
 
