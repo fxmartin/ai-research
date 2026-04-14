@@ -152,6 +152,39 @@ ai-research/
 └── pyproject.toml
 ```
 
+## `/loop` compatibility smoke test
+
+`/ingest-inbox` is designed to be driven by Claude Code's `/loop` harness at a
+fixed interval, so you can leave a session open and have `raw/` drain itself.
+Use this manual checklist to validate the loop contract after a change to
+`.claude/commands/ingest-inbox.md` or any toolkit verb it composes.
+
+Invocation:
+
+```text
+/loop 20m /ingest-inbox
+```
+
+Checklist (run in an interactive `claude` session inside the repo):
+
+- [ ] **Empty-inbox tick is clean.** With `raw/` empty, wait for one tick. The
+      command reports `nothing to ingest` and does NOT mark the loop as failed.
+- [ ] **Drop-and-drain.** Copy one new PDF into `raw/`. Within 20 minutes the
+      file appears under `sources/<yyyy>/<mm>/…` and a page shows up in `wiki/`.
+- [ ] **Idempotent repeat.** On the next tick after a successful drain, the
+      command again reports `nothing to ingest` (no duplicate pages, no errors).
+      This confirms `--skip-known` is doing its job.
+- [ ] **Structured status on every tick.** Each tick's stdout contains the
+      `scanned:` / `ingested:` / `index:` summary block (or the single-line
+      `nothing to ingest` sentinel).
+- [ ] **Partial failure doesn't abort the loop.** Drop one good file and one
+      unsupported file into `raw/`. The good file ingests; the bad file is
+      reported under `failures:`; the loop keeps firing on the next tick.
+
+If any step fails, re-run the contract tests
+(`uv run pytest tests/test_slash_commands.py::TestLoopCompat`) and inspect
+`.claude/commands/ingest-inbox.md` for drift.
+
 ## Privacy
 
 - All state is local. The Python toolkit makes **no** outbound network calls except explicit `extract` fetches against user-provided URLs.

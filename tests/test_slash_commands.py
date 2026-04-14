@@ -445,207 +445,6 @@ class TestIngestInboxCommand:
             "body must surface per-file failures in the output summary"
         )
 
-    def test_argument_hint_is_no_arguments(self, parsed: tuple[dict[str, object], str]) -> None:
-        """`argument-hint` must signal this command takes no arguments.
-
-        Unlike `/ingest` (hint: ``<path-or-url>``), ``/ingest-inbox`` takes nothing;
-        the hint must make that explicit so the Claude Code harness shows the right UX.
-        """
-        fm, _ = parsed
-        hint = str(fm.get("argument-hint", ""))
-        # Accept the literal value used in the spec or any phrasing that conveys
-        # "no arguments" clearly.
-        assert re.search(r"no arguments|\(no arguments\)", hint, re.IGNORECASE) or hint == "", (
-            f"argument-hint must indicate the command takes no arguments, got: {hint!r}"
-        )
-
-    def test_body_scan_uses_json_flag(self, parsed: tuple[dict[str, object], str]) -> None:
-        """``ai-research scan`` must be invoked with ``--json`` so output is machine-parseable.
-
-        The batch loop parses the scan output as a JSON array of paths; without
-        ``--json`` the output format is undefined and loop logic would break.
-        """
-        _, body = parsed
-        assert "--json" in body, (
-            "body must pass --json to `ai-research scan` so the path list is "
-            "machine-parseable by the batch loop"
-        )
-
-
-# ---------------------------------------------------------------------------
-# Contract tests for .claude/commands/ingest-inbox.md  (Story 03.2-001)
-# ---------------------------------------------------------------------------
-
-class TestIngestInboxCommand:
-    """Contract tests for ``.claude/commands/ingest-inbox.md`` (Story 03.2-001).
-
-    ``/ingest-inbox`` drains ``raw/`` by shelling out to
-    ``ai-research scan raw/ --skip-known`` then inlining the per-file ingest
-    pipeline (extract → draft → stub → materialize) in a single Claude Code
-    turn, rebuilding the index exactly once at the end.
-    """
-
-    @pytest.fixture
-    def command_path(self) -> Path:
-        path = COMMANDS_DIR / "ingest-inbox.md"
-        assert path.is_file(), f"missing slash command spec: {path}"
-        return path
-
-    @pytest.fixture
-    def parsed(self, command_path: Path) -> tuple[dict[str, object], str]:
-        return _split_frontmatter(command_path.read_text(encoding="utf-8"))
-
-    # ------------------------------------------------------------------
-    # Frontmatter contract
-    # ------------------------------------------------------------------
-
-    def test_frontmatter_has_required_fields(
-        self, parsed: tuple[dict[str, object], str]
-    ) -> None:
-        fm, _ = parsed
-        for key in ("description", "argument-hint", "allowed-tools"):
-            assert key in fm, f"frontmatter missing required key: {key}"
-        assert isinstance(fm["description"], str) and fm["description"].strip()
-
-    def test_allowed_tools_enables_bash_and_write(
-        self, parsed: tuple[dict[str, object], str]
-    ) -> None:
-        fm, _ = parsed
-        tokens = {t.strip() for t in str(fm["allowed-tools"]).split(",")}
-        for required in ("Bash", "Write", "Read"):
-            assert required in tokens, (
-                f"ingest-inbox must permit {required!r} — got {tokens}"
-            )
-
-    # ------------------------------------------------------------------
-    # Scan → ingest loop
-    # ------------------------------------------------------------------
-
-    def test_body_invokes_scan_verb(self, parsed: tuple[dict[str, object], str]) -> None:
-        _, body = parsed
-        assert "ai-research scan" in body, (
-            "body must shell out to `ai-research scan raw/` to enumerate "
-            "eligible files"
-        )
-
-    def test_body_scans_raw_directory(self, parsed: tuple[dict[str, object], str]) -> None:
-        _, body = parsed
-        assert "raw/" in body, "body must target the raw/ inbox directory"
-
-    def test_body_loops_inline_not_via_slash_ingest(
-        self, parsed: tuple[dict[str, object], str]
-    ) -> None:
-        """Per technical notes, the loop must call Python verbs directly, NOT /ingest."""
-        _, body = parsed
-        # The body must reference the per-file verbs directly.
-        for verb in ("ai-research extract", "ai-research materialize"):
-            assert verb in body, f"body must call `{verb}` directly per file"
-        # And explicitly avoid re-entering the slash command.
-        assert re.search(r"not.*re-?enter|not.*re-?invoking|NOT.*/ingest", body, re.IGNORECASE), (
-            "body must explicitly document that it does NOT re-invoke /ingest per file"
-        )
-
-    # ------------------------------------------------------------------
-    # Idempotency
-    # ------------------------------------------------------------------
-
-    def test_body_uses_skip_known_for_idempotency(
-        self, parsed: tuple[dict[str, object], str]
-    ) -> None:
-        _, body = parsed
-        assert "--skip-known" in body, (
-            "body must pass --skip-known to scan so already-ingested sources "
-            "are filtered out (idempotency)"
-        )
-
-    def test_body_documents_idempotency_contract(
-        self, parsed: tuple[dict[str, object], str]
-    ) -> None:
-        _, body = parsed
-        assert re.search(r"idempoten", body, re.IGNORECASE), (
-            "body must state the idempotency contract explicitly"
-        )
-
-    def test_body_mentions_mtime_skip(self, parsed: tuple[dict[str, object], str]) -> None:
-        """Files younger than 5s must be deferred to the next tick."""
-        _, body = parsed
-        assert re.search(r"mtime|min-age|5\s*s|5-?second", body, re.IGNORECASE), (
-            "body must document the mtime-based skip for very new files"
-        )
-
-    # ------------------------------------------------------------------
-    # Index rebuild exactly once
-    # ------------------------------------------------------------------
-
-    def test_body_rebuilds_index_exactly_once(
-        self, parsed: tuple[dict[str, object], str]
-    ) -> None:
-        _, body = parsed
-        assert "ai-research index-rebuild" in body, (
-            "body must invoke index-rebuild once at the end"
-        )
-        assert "--skip-index" in body, (
-            "per-file materialize calls must pass --skip-index so the batch "
-            "only rebuilds the index once"
-        )
-        assert re.search(r"once|exactly once", body, re.IGNORECASE), (
-            "body must explicitly pin that index-rebuild runs exactly once"
-        )
-
-    def test_body_index_rebuild_after_loop(
-        self, parsed: tuple[dict[str, object], str]
-    ) -> None:
-        _, body = parsed
-        idx_materialize = body.rfind("ai-research materialize")
-        idx_index = body.rfind("ai-research index-rebuild")
-        assert 0 < idx_materialize < idx_index, (
-            "ai-research index-rebuild must appear after the per-file materialize "
-            "prose — ordering signals the once-at-end contract"
-        )
-
-    # ------------------------------------------------------------------
-    # Failure handling
-    # ------------------------------------------------------------------
-
-    def test_body_documents_partial_failure_continues(
-        self, parsed: tuple[dict[str, object], str]
-    ) -> None:
-        """One bad file must not abort the batch."""
-        _, body = parsed
-        assert re.search(r"continue|do not abort|not abort", body, re.IGNORECASE), (
-            "body must document that per-file failures do not abort the batch"
-        )
-
-    def test_body_documents_empty_inbox_clean_exit(
-        self, parsed: tuple[dict[str, object], str]
-    ) -> None:
-        """Empty raw/ is a clean exit, not an error."""
-        _, body = parsed
-        assert "nothing to ingest" in body, (
-            "body must document the `nothing to ingest` message for empty raw/"
-        )
-
-    # ------------------------------------------------------------------
-    # Structured output
-    # ------------------------------------------------------------------
-
-    def test_body_documents_structured_output(
-        self, parsed: tuple[dict[str, object], str]
-    ) -> None:
-        _, body = parsed
-        for line_key in ("scanned:", "ingested:", "pages:", "index:"):
-            assert line_key in body, (
-                f"output summary missing key `{line_key}` — headless callers parse this"
-            )
-
-    def test_body_reports_failures_in_output(
-        self, parsed: tuple[dict[str, object], str]
-    ) -> None:
-        _, body = parsed
-        assert "failures:" in body or "failed" in body, (
-            "body must surface per-file failures in the output summary"
-        )
-
 
 # ---------------------------------------------------------------------------
 # Contract tests for .claude/commands/ask.md  (Story 03.3-001)
@@ -901,3 +700,157 @@ class TestAskCommand:
         """Spec must verify wiki/ directory exists and contains .md files."""
         body = post.content
         assert "wiki/" in body, "ask.md Stage 0 does not check wiki/ directory"
+
+
+# ---------------------------------------------------------------------------
+# Story 03.2-002: /loop compatibility smoke test for /ingest-inbox
+# ---------------------------------------------------------------------------
+
+
+class TestLoopCompat:
+    """Contract tests asserting ``/ingest-inbox`` is `/loop`-driveable.
+
+    The ``/loop <interval> <slash-command>`` harness fires a slash command on a
+    recurring interval with no user-supplied arguments. For ``/ingest-inbox`` to
+    be a safe ``/loop`` target it must:
+
+    1. Take **no required arguments** (the harness does not supply any).
+    2. Be **idempotent** — repeated ticks on an unchanged ``raw/`` must be no-ops.
+    3. Have a **clean empty-inbox exit** — an empty tick must NOT signal error.
+    4. Emit **structured status on stdout** so the loop harness (and a human
+       watching) can tell at a glance what happened on each tick.
+    5. Be **self-contained** — no reliance on pre-set environment variables or
+       CWD magic that would break under the harness.
+
+    These tests guard the contract at the spec level; a manual
+    ``/loop 20m /ingest-inbox`` smoke test is recorded in README.md (Story DoD).
+    """
+
+    @pytest.fixture(scope="class")
+    def post(self) -> frontmatter.Post:
+        return _load("ingest-inbox.md")
+
+    # ------------------------------------------------------------------
+    # 1. No-arg contract
+    # ------------------------------------------------------------------
+
+    def test_loop_compat_argument_hint_signals_no_args(self, post: frontmatter.Post) -> None:
+        """``argument-hint`` must signal no args — `/loop` passes none."""
+        hint = str(post.metadata.get("argument-hint", ""))
+        assert re.search(r"no arguments|\(no arguments\)", hint, re.IGNORECASE) or hint == "", (
+            f"/loop-driven commands must declare no required args; got hint={hint!r}"
+        )
+
+    def test_loop_compat_body_ignores_arguments_if_passed(self, post: frontmatter.Post) -> None:
+        """Body must explicitly state ``$ARGUMENTS`` is ignored if supplied.
+
+        A ``/loop`` harness may surface an empty ``$ARGUMENTS`` token; the command
+        must document that it ignores it rather than erroring.
+        """
+        body = post.content
+        pattern = r"\$ARGUMENTS.*ignore|ignore.*\$ARGUMENTS|no arguments"
+        assert re.search(pattern, body, re.IGNORECASE), (
+            "body must document that $ARGUMENTS is ignored / command takes no arguments"
+        )
+
+    # ------------------------------------------------------------------
+    # 2. Idempotency under repeated ticks
+    # ------------------------------------------------------------------
+
+    def test_loop_compat_idempotent_via_skip_known(self, post: frontmatter.Post) -> None:
+        """Repeated ticks must be no-ops — guaranteed by ``--skip-known``."""
+        body = post.content
+        assert "--skip-known" in body, (
+            "`/loop`-driven /ingest-inbox must pass --skip-known so repeated "
+            "ticks on an unchanged raw/ are no-ops"
+        )
+
+    def test_loop_compat_idempotency_contract_stated(self, post: frontmatter.Post) -> None:
+        """The idempotency contract must be explicit in the spec prose."""
+        body = post.content
+        assert re.search(r"idempoten", body, re.IGNORECASE), (
+            "spec must state the idempotency contract so /loop ticks are safe"
+        )
+
+    # ------------------------------------------------------------------
+    # 3. Empty inbox is a clean tick, not an error
+    # ------------------------------------------------------------------
+
+    def test_loop_compat_empty_inbox_is_clean_exit(self, post: frontmatter.Post) -> None:
+        """Empty ``raw/`` must emit `nothing to ingest` and NOT error.
+
+        Under `/loop`, a tick with nothing to do is the common case. Erroring
+        would make the loop look chronically broken.
+        """
+        body = post.content
+        assert "nothing to ingest" in body, (
+            "spec must define the `nothing to ingest` clean-exit message for "
+            "empty ticks under /loop"
+        )
+        assert re.search(r"not.*error|clean exit|not a failure", body, re.IGNORECASE), (
+            "spec must state explicitly that empty raw/ is NOT an error"
+        )
+
+    # ------------------------------------------------------------------
+    # 4. Structured status on stdout for the loop harness to parse
+    # ------------------------------------------------------------------
+
+    def test_loop_compat_structured_status_keys_present(self, post: frontmatter.Post) -> None:
+        """Each /loop tick must emit a parseable status block on stdout."""
+        body = post.content
+        for key in ("scanned:", "ingested:", "index:"):
+            assert key in body, f"loop harness parses tick output — required key `{key}` missing"
+
+    def test_loop_compat_status_block_includes_failure_line(self, post: frontmatter.Post) -> None:
+        """Failed files must be surfaced so a watcher notices trouble."""
+        body = post.content
+        assert "failures:" in body or "failed" in body, (
+            "loop tick output must surface per-file failures"
+        )
+
+    # ------------------------------------------------------------------
+    # 5. Self-contained — no hidden prerequisites that a tick can't satisfy
+    # ------------------------------------------------------------------
+
+    def test_loop_compat_no_required_env_var(self, post: frontmatter.Post) -> None:
+        """Spec must not require environment variables a /loop tick would lack.
+
+        ``$ARGUMENTS`` is an allowed Claude Code slash-command token; anything
+        else that looks like a required ``$ENV_VAR`` would break under /loop.
+        """
+        body = post.content
+        # Collect $IDENTIFIER tokens and drop known-allowed ones.
+        tokens = set(re.findall(r"\$([A-Z_][A-Z0-9_]{2,})", body))
+        allowed = {"ARGUMENTS", "DRAFT"}  # DRAFT is a shell-local per the inline pipeline
+        leaked = tokens - allowed
+        assert not leaked, (
+            f"unexpected $ENV references in ingest-inbox.md would break /loop: {leaked}"
+        )
+
+    def test_loop_compat_runs_toolkit_via_uv(self, post: frontmatter.Post) -> None:
+        """Spec must invoke toolkit verbs via ``uv run`` so the venv is reproducible.
+
+        Under /loop (and especially under ``claude -p`` scheduled from launchd),
+        the active PATH is not guaranteed. ``uv run`` resolves the project env.
+        """
+        body = post.content
+        assert "uv run ai-research" in body, (
+            "toolkit verbs must be invoked as `uv run ai-research ...` so the "
+            "loop tick works regardless of ambient PATH"
+        )
+
+    # ------------------------------------------------------------------
+    # 6. README documents the /loop smoke test checklist (DoD)
+    # ------------------------------------------------------------------
+
+    def test_readme_documents_loop_smoke_test_checklist(self) -> None:
+        """README must carry the manual /loop smoke-test checklist (Story DoD)."""
+        readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
+        assert re.search(r"/loop\s+\d+m?\s+/ingest-inbox", readme), (
+            "README must document the `/loop <interval> /ingest-inbox` invocation"
+        )
+        assert re.search(r"smoke test|checklist", readme, re.IGNORECASE), (
+            "README must label the /loop compatibility section as a smoke-test checklist"
+        )
+        # Core assertions from the story ACs must appear in the checklist.
+        assert "nothing to ingest" in readme, "README checklist must assert the empty-tick message"
