@@ -30,6 +30,17 @@ class UrlExtractionError(RuntimeError):
     """Raised when a URL cannot be fetched or its content cannot be extracted."""
 
 
+class _Resp:
+    """Minimal response adapter that exposes ``content`` (bytes) and ``headers`` (dict).
+
+    Used by ``_fetch`` to normalise the varying shapes returned by different
+    trafilatura download APIs so the rest of the module sees a stable interface.
+    """
+
+    content: bytes
+    headers: dict[str, str]
+
+
 def _fetch(url: str) -> Any:
     """Download a URL and return a response-like object or None on failure.
 
@@ -56,9 +67,6 @@ def _fetch(url: str) -> Any:
         content = getattr(resp, "data", None) or getattr(resp, "content", None) or b""
         headers = dict(getattr(resp, "headers", {}) or {})
 
-        class _Resp:
-            pass
-
         r = _Resp()
         r.content = content  # type: ignore[attr-defined]
         r.headers = headers  # type: ignore[attr-defined]
@@ -68,9 +76,6 @@ def _fetch(url: str) -> Any:
     html = trafilatura.fetch_url(url)
     if html is None:
         return None
-
-    class _Resp:
-        pass
 
     r = _Resp()
     r.content = html.encode("utf-8") if isinstance(html, str) else html  # type: ignore[attr-defined]
