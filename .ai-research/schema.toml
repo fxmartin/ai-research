@@ -1,0 +1,38 @@
+# Canonical schema for the ai-research wiki.
+#
+# Loaded and validated by `src/ai_research/schema.py` (`load_schema`). Slash
+# commands (e.g. `/ingest`, `/ask`) splice values from this file into Claude's
+# drafting context — no LLM calls happen in the Python toolkit.
+#
+# Tune page-draft structure here rather than editing the slash command prose.
+
+[wiki]
+name = "ai-research"
+version = 1
+
+[[page_templates]]
+id = "source"
+path_prefix = "sources/"
+frontmatter_required = ["title", "source_type", "sha256"]
+
+[[page_templates]]
+id = "concept"
+path_prefix = "concepts/"
+frontmatter_required = ["title", "tags"]
+
+# --- Prompt templates ---------------------------------------------------------
+# Consumed by slash commands. Pure data; no code here.
+
+[prompts.page_draft]
+sections = ["Summary", "Key Claims", "Connections"]
+tone = "neutral, encyclopedic; third-person; cite the source verbatim when claims are contested"
+bullet_density = "prefer bullets for Key Claims and Connections; prose for Summary (<= 5 sentences)"
+instructions = """Draft an Obsidian-compatible wiki page from the extracted source.
+
+Rules:
+- Open with an H1 matching the page title.
+- Emit the sections above as H2 headings in the given order.
+- Use [[wikilinks]] for every named concept, person, or work referenced.
+- Collect new concept names so the caller can materialize stubs under wiki/concepts/.
+- Do NOT fabricate citations; only cite what appears in the extracted text.
+"""
