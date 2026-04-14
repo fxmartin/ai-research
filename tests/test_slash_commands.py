@@ -70,6 +70,14 @@ class TestSplitFrontmatterHelper:
         assert fm["allowed-tools"] == "Bash, Read"
         assert body.strip() == "body"
 
+    def test_raises_when_frontmatter_is_not_a_mapping(self) -> None:
+        """YAML front-matter that parses to a non-dict (bare scalar) must be rejected."""
+        # A bare scalar at the top of the YAML block is syntactically valid YAML but
+        # an invalid slash-command contract — the Claude Code harness expects a mapping.
+        src = "---\njust a string\n---\nbody\n"
+        with pytest.raises(AssertionError, match="frontmatter must be a YAML mapping"):
+            _split_frontmatter(src)
+
 
 # ---------------------------------------------------------------------------
 # Contract tests for .claude/commands/ingest.md  (Story 03.1-001)
@@ -435,6 +443,32 @@ class TestIngestInboxCommand:
         _, body = parsed
         assert "failures:" in body or "failed" in body, (
             "body must surface per-file failures in the output summary"
+        )
+
+    def test_argument_hint_is_no_arguments(self, parsed: tuple[dict[str, object], str]) -> None:
+        """`argument-hint` must signal this command takes no arguments.
+
+        Unlike `/ingest` (hint: ``<path-or-url>``), ``/ingest-inbox`` takes nothing;
+        the hint must make that explicit so the Claude Code harness shows the right UX.
+        """
+        fm, _ = parsed
+        hint = str(fm.get("argument-hint", ""))
+        # Accept the literal value used in the spec or any phrasing that conveys
+        # "no arguments" clearly.
+        assert re.search(r"no arguments|\(no arguments\)", hint, re.IGNORECASE) or hint == "", (
+            f"argument-hint must indicate the command takes no arguments, got: {hint!r}"
+        )
+
+    def test_body_scan_uses_json_flag(self, parsed: tuple[dict[str, object], str]) -> None:
+        """``ai-research scan`` must be invoked with ``--json`` so output is machine-parseable.
+
+        The batch loop parses the scan output as a JSON array of paths; without
+        ``--json`` the output format is undefined and loop logic would break.
+        """
+        _, body = parsed
+        assert "--json" in body, (
+            "body must pass --json to `ai-research scan` so the path list is "
+            "machine-parseable by the batch loop"
         )
 
 
