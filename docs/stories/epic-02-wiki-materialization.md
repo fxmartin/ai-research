@@ -101,8 +101,8 @@
 **Technical Notes**: One line ≈ 200 chars target. Include H1s verbatim (not LLM summary) — risk mitigation from REQUIREMENTS §8.
 
 **Definition of Done**:
-- [ ] Unit tests with fixture vault.
-- [ ] Determinism test (run twice, diff).
+- [x] Unit tests with fixture vault.
+- [x] Determinism test (run twice, diff).
 
 **Dependencies**: 02.1-001
 **Risk Level**: Low
@@ -154,8 +154,8 @@
 - [x] Story 02.1-001 (3 pts)
 - [ ] Story 02.1-002 (3 pts)
 - [ ] Story 02.1-003 (2 pts)
-- [ ] Story 02.2-001 (3 pts)
+- [x] Story 02.2-001 (3 pts)
 - [ ] Story 02.2-002 (2 pts)
 - [ ] Story 02.2-003 (3 pts)
 
-**Completed**: 1 / 6 stories · 3 / 16 pts.
+**Completed**: 2 / 6 stories · 6 / 16 pts.
