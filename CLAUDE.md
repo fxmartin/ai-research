@@ -106,8 +106,37 @@ Embeddings and graph-walk expansion (follow `[[wikilinks]]` 1–2 hops) are P2.
 - No deployment pipeline — local CLI, installed via `uv tool install .`.
 - Release: tag-driven; `uv build` produces sdist + wheel.
 
+## Story Management Protocol
+
+### Single Source of Truth
+The `docs/stories/` directory and its epic files are the **single source of truth** for all story definitions, progress tracking, and acceptance criteria.
+
+### Story File Hierarchy
+```
+docs/STORIES.md                            # overview and navigation
+docs/stories/
+  epic-01-foundation-toolkit.md
+  epic-02-wiki-materialization.md
+  epic-03-slash-commands.md
+  epic-04-quality-docs.md
+  epic-05-phase-2.md
+  non-functional-requirements.md
+```
+
+### Progress Update Protocol
+1. Update story completion checkboxes in epic files.
+2. Mark completed acceptance criteria.
+3. Update dependency tracking when stories ship.
+4. Keep the "Completed: X / N" counter at the bottom of each epic in sync.
+
+### Development Workflow
+- **Sprint planning**: pick stories directly from epic files.
+- **Commits + PRs**: reference story IDs, e.g. `feat: atomic page write (Story 02.1-001)`.
+- **Updates**: within 24 hours of story completion.
+
 ## Key Docs
 
 - `PROJECT-SEED.md` — bootstrap seed from `/project-init`.
 - `REQUIREMENTS.md` — full PRD (problems, scope, P0/P1/P2, phases, risks).
+- `docs/STORIES.md` — story overview + epic navigation.
 - Source paper: https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f
