@@ -81,7 +81,7 @@
 
 **Definition of Done**:
 - [x] Unit tests for each failure mode.
-- [ ] Invoked in CI.
+- [x] Invoked in CI.
 
 **Dependencies**: 02.1-001, 02.1-003, 02.2-001
 **Risk Level**: Medium — wikilink syntax has edge cases (aliases, section anchors).
@@ -141,4 +141,4 @@
 - [ ] Story 04.3-001 (1 pt)
 - [ ] Story 04.3-002 (1 pt)
 
-**Completed**: 1 / 5 stories · 3 / 11 pts.
+**Completed**: 2 / 5 stories · 6 / 11 pts.
