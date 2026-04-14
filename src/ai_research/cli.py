@@ -22,6 +22,7 @@ from ai_research.extract.pdf import (
     PdftotextNotFoundError,
     extract_pdf,
 )
+from ai_research.extract.url import UrlExtractionError, extract_url
 from ai_research.scan import DEFAULT_MIN_AGE_SECONDS, scan_raw
 from ai_research.search import run_search
 from ai_research.state import load_state
@@ -58,6 +59,17 @@ def extract(
     Supports PDF (.pdf), markdown (.md, .markdown), and plain text (.txt).
     The unified dispatcher (Story 01.2-004) will add URL support.
     """
+    # URL dispatch (Story 01.2-002) — precedes path-based suffix routing.
+    if source.startswith(("http://", "https://")):
+        try:
+            result = extract_url(source)
+        except UrlExtractionError as exc:
+            typer.echo(f"extract: {exc}", err=True)
+            raise typer.Exit(code=1) from exc
+        json.dump(result, sys.stdout, ensure_ascii=False)
+        sys.stdout.write("\n")
+        return
+
     src_path = Path(source)
     suffix = src_path.suffix.lower()
 

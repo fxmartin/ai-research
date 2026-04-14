@@ -13,10 +13,13 @@ from ai_research.extract.pdf import (
     PdftotextNotFoundError,
     extract_pdf,
 )
+from ai_research.extract.url import UrlExtractionError, extract_url
 
 __all__ = [
     "extract_markdown",
     "extract_pdf",
+    "extract_url",
     "PdfExtractionError",
     "PdftotextNotFoundError",
+    "UrlExtractionError",
 ]
