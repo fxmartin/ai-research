@@ -81,8 +81,8 @@
 **Technical Notes**: Run `pdftotext -layout <pdf> -`. Hash is of the raw PDF bytes, not the extracted text.
 
 **Definition of Done**:
-- [ ] Unit test with a fixture PDF under `tests/fixtures/`.
-- [ ] Error messaging tested.
+- [x] Unit test with a fixture PDF under `tests/fixtures/`.
+- [x] Error messaging tested.
 
 **Dependencies**: 01.1-001
 **Risk Level**: Low
