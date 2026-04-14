@@ -52,7 +52,9 @@ def test_materialize_writes_page_with_frontmatter(tmp_path: Path) -> None:
     assert post["ingested_at"] == FIXED_NOW.isoformat()
     assert post["source_hash"] == result.source_hash
     assert post["locked"] is False
-    assert post.content.strip().endswith("Body paragraph.")
+    # Body now ends with the ## Sources back-reference (Story 02.2-003).
+    assert "Body paragraph." in post.content
+    assert post.content.rstrip().endswith(f"]({source.relative_to(tmp_path)})")
 
 
 def test_materialize_updates_state_mapping(tmp_path: Path) -> None:
@@ -381,6 +383,142 @@ def test_materialize_payload_already_newline_terminated(tmp_path: Path) -> None:
     content = result.page_path.read_bytes()
     assert content.endswith(b"\n")
     assert not content.endswith(b"\n\n\n")
+
+
+def test_materialize_writes_sources_section(tmp_path: Path) -> None:
+    """AC1: page body ends with ## Sources listing the archived source."""
+    source = _setup_source(tmp_path)
+    draft = tmp_path / "draft.md"
+    draft.write_text("# Page\n\nBody.\n", encoding="utf-8")
+    wiki_dir = tmp_path / "wiki"
+    state_path = tmp_path / "state.json"
+
+    result = materialize(
+        source=source,
+        draft_path=draft,
+        wiki_dir=wiki_dir,
+        state_path=state_path,
+        now=FIXED_NOW,
+    )
+    text = result.page_path.read_text(encoding="utf-8")
+    assert "## Sources" in text
+    # Path should be relative to the vault's parent (tmp_path).
+    assert "- [Page](sources/paper.md)" in text
+
+
+def test_materialize_rematerialize_same_source_is_idempotent(tmp_path: Path) -> None:
+    """AC: re-running with the same source does not duplicate the bullet."""
+    source = _setup_source(tmp_path)
+    draft = tmp_path / "draft.md"
+    draft.write_text("# Page\n\nBody.\n", encoding="utf-8")
+    wiki_dir = tmp_path / "wiki"
+    state_path = tmp_path / "state.json"
+
+    materialize(
+        source=source,
+        draft_path=draft,
+        wiki_dir=wiki_dir,
+        state_path=state_path,
+        now=FIXED_NOW,
+    )
+    r2 = materialize(
+        source=source,
+        draft_path=draft,
+        wiki_dir=wiki_dir,
+        state_path=state_path,
+        now=FIXED_NOW,
+    )
+    text = r2.page_path.read_text(encoding="utf-8")
+    assert text.count("- [Page](sources/paper.md)") == 1
+    assert text.count("## Sources") == 1
+
+
+def test_materialize_appends_new_source_to_existing_page(tmp_path: Path) -> None:
+    """AC2: re-materializing with a different source path appends a new bullet."""
+    source_a = _setup_source(tmp_path, content="alpha\n")
+    draft = tmp_path / "draft.md"
+    draft.write_text("# Page\n\nBody.\n", encoding="utf-8")
+    wiki_dir = tmp_path / "wiki"
+    state_path = tmp_path / "state.json"
+
+    materialize(
+        source=source_a,
+        draft_path=draft,
+        wiki_dir=wiki_dir,
+        state_path=state_path,
+        now=FIXED_NOW,
+    )
+
+    # Different source file with the same resulting title (so same page slug).
+    source_b = tmp_path / "sources" / "paper2.md"
+    source_b.write_text("beta\n", encoding="utf-8")
+    r2 = materialize(
+        source=source_b,
+        draft_path=draft,
+        wiki_dir=wiki_dir,
+        state_path=state_path,
+        now=FIXED_NOW,
+    )
+    text = r2.page_path.read_text(encoding="utf-8")
+    assert "sources/paper.md" in text
+    assert "sources/paper2.md" in text
+    assert text.count("## Sources") == 1
+
+
+def test_materialize_url_source_records_original_url(tmp_path: Path) -> None:
+    """AC3: URL sources embed both archived path AND original URL."""
+    source = _setup_source(tmp_path)
+    draft = tmp_path / "draft.md"
+    draft.write_text("# Gist\n\nBody.\n", encoding="utf-8")
+    wiki_dir = tmp_path / "wiki"
+    state_path = tmp_path / "state.json"
+
+    url = "https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f"
+    result = materialize(
+        source=source,
+        draft_path=draft,
+        wiki_dir=wiki_dir,
+        state_path=state_path,
+        now=FIXED_NOW,
+        source_url=url,
+    )
+    text = result.page_path.read_text(encoding="utf-8")
+    assert "## Sources" in text
+    assert "sources/paper.md" in text
+    assert url in text
+
+
+def test_materialize_cli_passes_source_url(tmp_path: Path) -> None:
+    from typer.testing import CliRunner
+
+    from ai_research.cli import app
+
+    source = _setup_source(tmp_path)
+    draft = tmp_path / "draft.md"
+    draft.write_text("# Urlpage\n\nBody.\n", encoding="utf-8")
+    wiki_dir = tmp_path / "wiki"
+    state_path = tmp_path / "state.json"
+
+    runner = CliRunner()
+    res = runner.invoke(
+        app,
+        [
+            "materialize",
+            "--source",
+            str(source),
+            "--from",
+            str(draft),
+            "--wiki-dir",
+            str(wiki_dir),
+            "--state-file",
+            str(state_path),
+            "--source-url",
+            "https://example.com/doc",
+        ],
+    )
+    assert res.exit_code == 0, res.output
+    text = (wiki_dir / "urlpage.md").read_text(encoding="utf-8")
+    assert "https://example.com/doc" in text
 
 
 def test_materialize_appends_to_existing_state(tmp_path: Path) -> None:

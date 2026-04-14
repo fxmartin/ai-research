@@ -33,6 +33,7 @@ import frontmatter
 
 from ai_research.archive import slugify
 from ai_research.state import State, atomic_write, load_state, save_state
+from ai_research.wiki.sources import SourceEntry, merge_sources_section
 
 __all__ = ["MaterializeResult", "materialize"]
 
@@ -91,6 +92,7 @@ def materialize(
     state_path: Path,
     now: datetime | None = None,
     stdin: TextIO | None = None,
+    source_url: str | None = None,
 ) -> MaterializeResult:
     """Write ``wiki/<slug>.md`` from a draft and record state.
 
@@ -131,6 +133,16 @@ def materialize(
     post["locked"] = False
 
     page_path = Path(wiki_dir) / f"{slug}.md"
+
+    # Merge ``## Sources`` back-reference (Story 02.2-003). We read any
+    # existing page off disk so re-materialization preserves prior sources
+    # rather than dropping them (idempotent + additive by path).
+    source_rel = _page_relative_source_path(source, wiki_dir)
+    entry = SourceEntry(title=title, path=source_rel, url=source_url)
+    existing_body = _read_existing_body(page_path)
+    base_body = existing_body if existing_body is not None else post.content
+    post.content = merge_sources_section(base_body, entry)
+
     payload = frontmatter.dumps(post).encode("utf-8")
     if not payload.endswith(b"\n"):
         payload += b"\n"
@@ -149,6 +161,31 @@ def materialize(
     save_state(state_path, state)
 
     return MaterializeResult(page_path=page_path, source_hash=source_hash, slug=slug)
+
+
+def _read_existing_body(page_path: Path) -> str | None:
+    """Return the draft body of an existing page (without frontmatter) or None."""
+    if not page_path.exists():
+        return None
+    try:
+        post = frontmatter.loads(page_path.read_text(encoding="utf-8"))
+    except Exception:  # pragma: no cover - malformed page, treat as fresh
+        return None
+    return post.content
+
+
+def _page_relative_source_path(source: Path, wiki_dir: Path) -> str:
+    """Return the source path relative to the wiki vault's parent (repo root).
+
+    Obsidian pages link with paths relative to the vault root. ``wiki_dir``'s
+    parent is the natural anchor (the repo root in the default layout). If
+    ``source`` lives outside that anchor, fall back to the absolute path.
+    """
+    try:
+        anchor = Path(wiki_dir).resolve().parent
+        return str(Path(source).resolve().relative_to(anchor))
+    except ValueError:
+        return str(Path(source).resolve())
 
 
 def _relative_or_absolute(page_path: Path, state_path: Path) -> str:

@@ -142,7 +142,7 @@
 **Technical Notes**: Detect an existing `## Sources` section in the draft; merge rather than duplicate.
 
 **Definition of Done**:
-- [ ] Unit tests for fresh, update-same-source, update-different-source.
+- [x] Unit tests for fresh, update-same-source, update-different-source.
 
 **Dependencies**: 02.1-001
 **Risk Level**: Medium — merge logic is the easiest place to introduce bugs.
@@ -156,6 +156,6 @@
 - [x] Story 02.1-003 (2 pts)
 - [x] Story 02.2-001 (3 pts)
 - [ ] Story 02.2-002 (2 pts)
-- [ ] Story 02.2-003 (3 pts)
+- [x] Story 02.2-003 (3 pts)
 
-**Completed**: 3 / 6 stories · 8 / 16 pts.
+**Completed**: 4 / 6 stories · 11 / 16 pts.
