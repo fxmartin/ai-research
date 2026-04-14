@@ -286,10 +286,12 @@ def test_normalize_plain_name_with_spaces() -> None:
 def test_multiple_broken_citations_all_reported(tmp_path: Path) -> None:
     """All broken citations — not just the first — must appear in broken list."""
     wiki = _make_vault(tmp_path)
-    result = check_citations(
-        {"answer": "x", "citations": ["Attention", "Ghost", "Phantom", "Transformer"], "confidence": 0.5},
-        wiki_dir=wiki,
-    )
+    payload = {
+        "answer": "x",
+        "citations": ["Attention", "Ghost", "Phantom", "Transformer"],
+        "confidence": 0.5,
+    }
+    result = check_citations(payload, wiki_dir=wiki)
     assert result.ok is False
     assert sorted(result.broken) == ["Ghost", "Phantom"]
     assert sorted(result.resolved) == ["Attention", "Transformer"]
