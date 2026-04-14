@@ -11,8 +11,6 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-import re
-
 import frontmatter
 import pytest
 import yaml
@@ -21,11 +19,10 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 COMMANDS_DIR = REPO_ROOT / ".claude" / "commands"
 
 
-
 def _load(name: str) -> frontmatter.Post:
-	path = COMMANDS_DIR / name
-	assert path.exists(), f"slash command missing: {path}"
-	return frontmatter.load(path)
+    path = COMMANDS_DIR / name
+    assert path.exists(), f"slash command missing: {path}"
+    return frontmatter.load(path)
 
 
 def _split_frontmatter(text: str) -> tuple[dict[str, object], str]:
@@ -44,6 +41,7 @@ def _split_frontmatter(text: str) -> tuple[dict[str, object], str]:
 # ---------------------------------------------------------------------------
 # Unit tests for the _split_frontmatter helper itself
 # ---------------------------------------------------------------------------
+
 
 class TestSplitFrontmatterHelper:
     """Guard the ``_split_frontmatter`` parsing helper against regressions."""
@@ -72,10 +70,19 @@ class TestSplitFrontmatterHelper:
         assert fm["allowed-tools"] == "Bash, Read"
         assert body.strip() == "body"
 
+    def test_raises_when_frontmatter_is_not_a_mapping(self) -> None:
+        """YAML front-matter that parses to a non-dict (bare scalar) must be rejected."""
+        # A bare scalar at the top of the YAML block is syntactically valid YAML but
+        # an invalid slash-command contract — the Claude Code harness expects a mapping.
+        src = "---\njust a string\n---\nbody\n"
+        with pytest.raises(AssertionError, match="frontmatter must be a YAML mapping"):
+            _split_frontmatter(src)
+
 
 # ---------------------------------------------------------------------------
 # Contract tests for .claude/commands/ingest.md  (Story 03.1-001)
 # ---------------------------------------------------------------------------
+
 
 class TestIngestCommand:
     """Contract tests for ``.claude/commands/ingest.md`` (Story 03.1-001)."""
@@ -180,8 +187,7 @@ class TestIngestCommand:
         """``--skip-index`` must be used on stub/materialize calls so index rebuilds once."""
         _, body = parsed
         assert "--skip-index" in body, (
-            "body must use --skip-index on per-stub materialize calls to avoid "
-            "O(n) index rebuilds"
+            "body must use --skip-index on per-stub materialize calls to avoid O(n) index rebuilds"
         )
 
     def test_body_documents_unchanged_as_idempotent_success(
@@ -236,9 +242,7 @@ class TestIngestCommand:
                 f"output format missing key `{line_key}` — headless callers parse this"
             )
 
-    def test_body_documents_page_status_tokens(
-        self, parsed: tuple[dict[str, object], str]
-    ) -> None:
+    def test_body_documents_page_status_tokens(self, parsed: tuple[dict[str, object], str]) -> None:
         """CREATED / UPDATED / UNCHANGED tokens let callers determine what changed."""
         _, body = parsed
         for token in ("CREATED", "UPDATED", "UNCHANGED"):
@@ -280,9 +284,198 @@ class TestIngestCommand:
             "body must document that a non-zero exit from extract stops the pipeline"
         )
 
+
+# ---------------------------------------------------------------------------
+# Contract tests for .claude/commands/ingest-inbox.md  (Story 03.2-001)
+# ---------------------------------------------------------------------------
+
+
+class TestIngestInboxCommand:
+    """Contract tests for ``.claude/commands/ingest-inbox.md`` (Story 03.2-001).
+
+    ``/ingest-inbox`` drains ``raw/`` by shelling out to
+    ``ai-research scan raw/ --skip-known`` then inlining the per-file ingest
+    pipeline (extract → draft → stub → materialize) in a single Claude Code
+    turn, rebuilding the index exactly once at the end.
+    """
+
+    @pytest.fixture
+    def command_path(self) -> Path:
+        path = COMMANDS_DIR / "ingest-inbox.md"
+        assert path.is_file(), f"missing slash command spec: {path}"
+        return path
+
+    @pytest.fixture
+    def parsed(self, command_path: Path) -> tuple[dict[str, object], str]:
+        return _split_frontmatter(command_path.read_text(encoding="utf-8"))
+
+    # ------------------------------------------------------------------
+    # Frontmatter contract
+    # ------------------------------------------------------------------
+
+    def test_frontmatter_has_required_fields(self, parsed: tuple[dict[str, object], str]) -> None:
+        fm, _ = parsed
+        for key in ("description", "argument-hint", "allowed-tools"):
+            assert key in fm, f"frontmatter missing required key: {key}"
+        assert isinstance(fm["description"], str) and fm["description"].strip()
+
+    def test_allowed_tools_enables_bash_and_write(
+        self, parsed: tuple[dict[str, object], str]
+    ) -> None:
+        fm, _ = parsed
+        tokens = {t.strip() for t in str(fm["allowed-tools"]).split(",")}
+        for required in ("Bash", "Write", "Read"):
+            assert required in tokens, f"ingest-inbox must permit {required!r} — got {tokens}"
+
+    # ------------------------------------------------------------------
+    # Scan → ingest loop
+    # ------------------------------------------------------------------
+
+    def test_body_invokes_scan_verb(self, parsed: tuple[dict[str, object], str]) -> None:
+        _, body = parsed
+        assert "ai-research scan" in body, (
+            "body must shell out to `ai-research scan raw/` to enumerate eligible files"
+        )
+
+    def test_body_scans_raw_directory(self, parsed: tuple[dict[str, object], str]) -> None:
+        _, body = parsed
+        assert "raw/" in body, "body must target the raw/ inbox directory"
+
+    def test_body_loops_inline_not_via_slash_ingest(
+        self, parsed: tuple[dict[str, object], str]
+    ) -> None:
+        """Per technical notes, the loop must call Python verbs directly, NOT /ingest."""
+        _, body = parsed
+        # The body must reference the per-file verbs directly.
+        for verb in ("ai-research extract", "ai-research materialize"):
+            assert verb in body, f"body must call `{verb}` directly per file"
+        # And explicitly avoid re-entering the slash command.
+        assert re.search(r"not.*re-?enter|not.*re-?invoking|NOT.*/ingest", body, re.IGNORECASE), (
+            "body must explicitly document that it does NOT re-invoke /ingest per file"
+        )
+
+    # ------------------------------------------------------------------
+    # Idempotency
+    # ------------------------------------------------------------------
+
+    def test_body_uses_skip_known_for_idempotency(
+        self, parsed: tuple[dict[str, object], str]
+    ) -> None:
+        _, body = parsed
+        assert "--skip-known" in body, (
+            "body must pass --skip-known to scan so already-ingested sources "
+            "are filtered out (idempotency)"
+        )
+
+    def test_body_documents_idempotency_contract(
+        self, parsed: tuple[dict[str, object], str]
+    ) -> None:
+        _, body = parsed
+        assert re.search(r"idempoten", body, re.IGNORECASE), (
+            "body must state the idempotency contract explicitly"
+        )
+
+    def test_body_mentions_mtime_skip(self, parsed: tuple[dict[str, object], str]) -> None:
+        """Files younger than 5s must be deferred to the next tick."""
+        _, body = parsed
+        assert re.search(r"mtime|min-age|5\s*s|5-?second", body, re.IGNORECASE), (
+            "body must document the mtime-based skip for very new files"
+        )
+
+    # ------------------------------------------------------------------
+    # Index rebuild exactly once
+    # ------------------------------------------------------------------
+
+    def test_body_rebuilds_index_exactly_once(self, parsed: tuple[dict[str, object], str]) -> None:
+        _, body = parsed
+        assert "ai-research index-rebuild" in body, "body must invoke index-rebuild once at the end"
+        assert "--skip-index" in body, (
+            "per-file materialize calls must pass --skip-index so the batch "
+            "only rebuilds the index once"
+        )
+        assert re.search(r"once|exactly once", body, re.IGNORECASE), (
+            "body must explicitly pin that index-rebuild runs exactly once"
+        )
+
+    def test_body_index_rebuild_after_loop(self, parsed: tuple[dict[str, object], str]) -> None:
+        _, body = parsed
+        idx_materialize = body.rfind("ai-research materialize")
+        idx_index = body.rfind("ai-research index-rebuild")
+        assert 0 < idx_materialize < idx_index, (
+            "ai-research index-rebuild must appear after the per-file materialize "
+            "prose — ordering signals the once-at-end contract"
+        )
+
+    # ------------------------------------------------------------------
+    # Failure handling
+    # ------------------------------------------------------------------
+
+    def test_body_documents_partial_failure_continues(
+        self, parsed: tuple[dict[str, object], str]
+    ) -> None:
+        """One bad file must not abort the batch."""
+        _, body = parsed
+        assert re.search(r"continue|do not abort|not abort", body, re.IGNORECASE), (
+            "body must document that per-file failures do not abort the batch"
+        )
+
+    def test_body_documents_empty_inbox_clean_exit(
+        self, parsed: tuple[dict[str, object], str]
+    ) -> None:
+        """Empty raw/ is a clean exit, not an error."""
+        _, body = parsed
+        assert "nothing to ingest" in body, (
+            "body must document the `nothing to ingest` message for empty raw/"
+        )
+
+    # ------------------------------------------------------------------
+    # Structured output
+    # ------------------------------------------------------------------
+
+    def test_body_documents_structured_output(self, parsed: tuple[dict[str, object], str]) -> None:
+        _, body = parsed
+        for line_key in ("scanned:", "ingested:", "pages:", "index:"):
+            assert line_key in body, (
+                f"output summary missing key `{line_key}` — headless callers parse this"
+            )
+
+    def test_body_reports_failures_in_output(self, parsed: tuple[dict[str, object], str]) -> None:
+        _, body = parsed
+        assert "failures:" in body or "failed" in body, (
+            "body must surface per-file failures in the output summary"
+        )
+
+    def test_argument_hint_is_no_arguments(self, parsed: tuple[dict[str, object], str]) -> None:
+        """`argument-hint` must signal this command takes no arguments.
+
+        Unlike `/ingest` (hint: ``<path-or-url>``), ``/ingest-inbox`` takes nothing;
+        the hint must make that explicit so the Claude Code harness shows the right UX.
+        """
+        fm, _ = parsed
+        hint = str(fm.get("argument-hint", ""))
+        # Accept the literal value used in the spec or any phrasing that conveys
+        # "no arguments" clearly.
+        assert re.search(r"no arguments|\(no arguments\)", hint, re.IGNORECASE) or hint == "", (
+            f"argument-hint must indicate the command takes no arguments, got: {hint!r}"
+        )
+
+    def test_body_scan_uses_json_flag(self, parsed: tuple[dict[str, object], str]) -> None:
+        """``ai-research scan`` must be invoked with ``--json`` so output is machine-parseable.
+
+        The batch loop parses the scan output as a JSON array of paths; without
+        ``--json`` the output format is undefined and loop logic would break.
+        """
+        _, body = parsed
+        assert "--json" in body, (
+            "body must pass --json to `ai-research scan` so the path list is "
+            "machine-parseable by the batch loop"
+        )
+
+
 # ---------------------------------------------------------------------------
 # Contract tests for .claude/commands/ask.md  (Story 03.3-001)
 # ---------------------------------------------------------------------------
+
 
 class TestAskCommand:
     """Story 03.3-001: `/ask` slash command."""
@@ -388,7 +581,8 @@ class TestAskCommand:
         """The spec must explicitly instruct the model to emit ONLY the defined keys."""
         body = post.content
         # Look for language that pins the key set (no extra keys)
-        assert re.search(r'EXACTLY\s+these\s+keys|no extra keys|no prose|no markdown', body, re.IGNORECASE), (
+        pattern = r"EXACTLY\s+these\s+keys|no extra keys|no prose|no markdown"
+        assert re.search(pattern, body, re.IGNORECASE), (
             "ask.md does not pin the JSON output to exactly the defined keys"
         )
 
@@ -419,12 +613,12 @@ class TestAskCommand:
     def test_shortlist_minimum_bound_pinned(self, post: frontmatter.Post) -> None:
         """Spec must pin the minimum shortlist size of 3 pages."""
         body = post.content
-        assert re.search(r'\b3\b', body), "ask.md does not pin minimum shortlist of 3"
+        assert re.search(r"\b3\b", body), "ask.md does not pin minimum shortlist of 3"
 
     def test_shortlist_maximum_bound_pinned(self, post: frontmatter.Post) -> None:
         """Spec must pin the maximum shortlist size of 8 pages."""
         body = post.content
-        assert re.search(r'\b8\b', body), "ask.md does not pin maximum shortlist of 8"
+        assert re.search(r"\b8\b", body), "ask.md does not pin maximum shortlist of 8"
 
     def test_shortlist_bounds_in_stage1(self, post: frontmatter.Post) -> None:
         """Stage 1 must explicitly constrain the shortlist to 3–8 pages."""
@@ -443,7 +637,7 @@ class TestAskCommand:
     def test_deduplication_instruction_present(self, post: frontmatter.Post) -> None:
         """After fallback merge, the spec should require de-duplication by page name."""
         body = post.content
-        assert re.search(r'[Dd]e.duplic|dedup|unique', body), (
+        assert re.search(r"[Dd]e.duplic|dedup|unique", body), (
             "ask.md does not mention de-duplication after fallback merge"
         )
 
@@ -455,14 +649,15 @@ class TestAskCommand:
         """Spec must prohibit citing pages that were not read."""
         body = post.content
         # The spec should say something like "only cite what you read"
-        assert re.search(r'only cite|not invent|do not invent|did not read|actually read', body, re.IGNORECASE), (
+        pattern = r"only cite|not invent|do not invent|did not read|actually read"
+        assert re.search(pattern, body, re.IGNORECASE), (
             "ask.md does not enforce citation integrity (only cite pages actually read)"
         )
 
     def test_citation_format_bare_page_name(self, post: frontmatter.Post) -> None:
         """The spec must define citations as bare page names (no brackets, no .md)."""
         body = post.content
-        assert re.search(r'bare page name|no brackets|no \.md|no path', body, re.IGNORECASE), (
+        assert re.search(r"bare page name|no brackets|no \.md|no path", body, re.IGNORECASE), (
             "ask.md does not specify citations as bare page names"
         )
 
@@ -473,7 +668,7 @@ class TestAskCommand:
     def test_read_only_constraint_stated(self, post: frontmatter.Post) -> None:
         """Spec must state that /ask never modifies disk."""
         body = post.content
-        assert re.search(r'read.only|never modify|not modify|do not write', body, re.IGNORECASE), (
+        assert re.search(r"read.only|never modify|not modify|do not write", body, re.IGNORECASE), (
             "ask.md does not declare the read-only constraint"
         )
 
@@ -484,7 +679,7 @@ class TestAskCommand:
     def test_confidence_upper_bound_never_one(self, post: frontmatter.Post) -> None:
         """Spec must instruct model never to emit confidence=1.0."""
         body = post.content
-        assert re.search(r'[Nn]ever.*1\.0|1\.0.*[Nn]ever|reserve.*1\.0', body), (
+        assert re.search(r"[Nn]ever.*1\.0|1\.0.*[Nn]ever|reserve.*1\.0", body), (
             "ask.md does not instruct the model to never emit confidence=1.0"
         )
 
@@ -492,7 +687,7 @@ class TestAskCommand:
         """Spec must define the confidence scale (0.0 to <1.0)."""
         body = post.content
         # Should have at least one confidence range band described
-        assert re.search(r'0\.\d+.*0\.\d+|0\.0.*0\.9', body, re.DOTALL), (
+        assert re.search(r"0\.\d+.*0\.\d+|0\.0.*0\.9", body, re.DOTALL), (
             "ask.md does not define confidence scale bands"
         )
 
@@ -503,7 +698,7 @@ class TestAskCommand:
     def test_interactive_mode_sources_list(self, post: frontmatter.Post) -> None:
         """Interactive output must end with a Sources bullet list per spec."""
         body = post.content
-        assert re.search(r'[Ss]ources', body), (
+        assert re.search(r"[Ss]ources", body), (
             "ask.md does not describe the Sources list for interactive mode"
         )
 
