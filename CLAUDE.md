@@ -47,8 +47,41 @@ ai-research/
 
 Always use `gh` CLI for issues, PRs, releases, API calls.
 
+## LLM Provider
+
+v1 is **Anthropic-only** (Claude). Use prompt caching on system prompts and stable wiki context. Provider abstraction is deferred to P2 — do not introduce it until a second provider is actually being added.
+
+## Storage Layout
+
+```
+sources/          # immutable raw inputs (PDF, URL-snapshot, .md, transcript)
+wiki/             # Obsidian-compatible markdown pages (wikilinks + frontmatter)
+  concepts/       # stub pages for cross-referenced concepts
+  _contradictions.md  # Phase 2: index of flagged contradictions
+.ai-research/
+  schema.toml     # wiki structure & page templates
+  state.json      # source hashes, page→source index
+  cost.log        # per-command token + USD log
+```
+
+The vault under `wiki/` must remain openable as a pure Obsidian vault with zero tooling.
+
+## Testing Strategy
+
+- **Unit**: page CRUD, frontmatter parse, wikilink extraction, idempotency hashing.
+- **Integration**: ingest → wiki page, against recorded Anthropic responses (vcrpy-style) to keep tests deterministic and free.
+- **Golden-file**: fixture vault with a few sources; re-ingest must produce byte-identical output (except timestamps).
+- **Smoke**: Obsidian-compat lint — all wikilinks resolve or point to stubs; frontmatter YAML parses.
+- TDD for business logic (linker, contradiction detection). Authorization required to skip: "I AUTHORIZE YOU TO SKIP WRITING TESTS THIS TIME".
+
+## CI/CD
+
+- GitHub Actions: lint (`ruff`), type-check (`mypy` or `pyright`), tests (`pytest`) on push/PR.
+- No deployment pipeline — local CLI, installed via `uv tool install .`.
+- Release: tag-driven; `uv build` produces sdist + wheel.
+
 ## Key Docs
 
-<!-- Populated after /brainstorm and /generate-epics -->
-- `PROJECT-SEED.md` — Project seed data for downstream skills
+- `PROJECT-SEED.md` — bootstrap seed from `/project-init`.
+- `REQUIREMENTS.md` — full PRD (problems, scope, P0/P1/P2, phases, risks).
 - Source paper: https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f
