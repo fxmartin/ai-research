@@ -27,6 +27,7 @@ from ai_research.extract import (
 from ai_research.scan import DEFAULT_MIN_AGE_SECONDS, scan_raw
 from ai_research.search import run_search
 from ai_research.state import load_state
+from ai_research.wiki.materialize import materialize as materialize_page
 
 app = typer.Typer(
     name="ai-research",
@@ -158,6 +159,57 @@ def scan(
     else:
         for path in results:
             typer.echo(path)
+
+
+@app.command("materialize")
+def materialize(
+    source: Path = typer.Option(  # noqa: B008
+        ...,
+        "--source",
+        help="Path to the archived source file (used for source_hash + frontmatter).",
+    ),
+    draft: Path | None = typer.Option(  # noqa: B008
+        None,
+        "--from",
+        help="Path to the markdown draft to materialize. Mutually exclusive with --stdin.",
+    ),
+    read_stdin: bool = typer.Option(  # noqa: B008
+        False,
+        "--stdin",
+        help="Read the markdown draft from stdin instead of a file.",
+    ),
+    wiki_dir: Path = typer.Option(  # noqa: B008
+        Path("wiki"),
+        "--wiki-dir",
+        help="Root of the wiki vault to write into.",
+    ),
+    state_file: Path = typer.Option(  # noqa: B008
+        Path(".ai-research/state.json"),
+        "--state-file",
+        help="Path to state.json to update with the source_hash → page mapping.",
+    ),
+) -> None:
+    """Write ``wiki/<slug>.md`` from a draft, atomically, with frontmatter."""
+    if draft is None and not read_stdin:
+        typer.echo(
+            "materialize: provide --from <draft.md> or --stdin to supply the draft body.",
+            err=True,
+        )
+        raise typer.Exit(code=2)
+
+    try:
+        result = materialize_page(
+            source=source,
+            draft_path=draft,
+            wiki_dir=wiki_dir,
+            state_path=state_file,
+            stdin=sys.stdin if read_stdin else None,
+        )
+    except FileNotFoundError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+
+    typer.echo(str(result.page_path))
 
 
 if __name__ == "__main__":  # pragma: no cover
