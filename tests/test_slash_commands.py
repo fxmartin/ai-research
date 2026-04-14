@@ -473,6 +473,181 @@ class TestIngestInboxCommand:
 
 
 # ---------------------------------------------------------------------------
+# Contract tests for .claude/commands/ingest-inbox.md  (Story 03.2-001)
+# ---------------------------------------------------------------------------
+
+class TestIngestInboxCommand:
+    """Contract tests for ``.claude/commands/ingest-inbox.md`` (Story 03.2-001).
+
+    ``/ingest-inbox`` drains ``raw/`` by shelling out to
+    ``ai-research scan raw/ --skip-known`` then inlining the per-file ingest
+    pipeline (extract → draft → stub → materialize) in a single Claude Code
+    turn, rebuilding the index exactly once at the end.
+    """
+
+    @pytest.fixture
+    def command_path(self) -> Path:
+        path = COMMANDS_DIR / "ingest-inbox.md"
+        assert path.is_file(), f"missing slash command spec: {path}"
+        return path
+
+    @pytest.fixture
+    def parsed(self, command_path: Path) -> tuple[dict[str, object], str]:
+        return _split_frontmatter(command_path.read_text(encoding="utf-8"))
+
+    # ------------------------------------------------------------------
+    # Frontmatter contract
+    # ------------------------------------------------------------------
+
+    def test_frontmatter_has_required_fields(
+        self, parsed: tuple[dict[str, object], str]
+    ) -> None:
+        fm, _ = parsed
+        for key in ("description", "argument-hint", "allowed-tools"):
+            assert key in fm, f"frontmatter missing required key: {key}"
+        assert isinstance(fm["description"], str) and fm["description"].strip()
+
+    def test_allowed_tools_enables_bash_and_write(
+        self, parsed: tuple[dict[str, object], str]
+    ) -> None:
+        fm, _ = parsed
+        tokens = {t.strip() for t in str(fm["allowed-tools"]).split(",")}
+        for required in ("Bash", "Write", "Read"):
+            assert required in tokens, (
+                f"ingest-inbox must permit {required!r} — got {tokens}"
+            )
+
+    # ------------------------------------------------------------------
+    # Scan → ingest loop
+    # ------------------------------------------------------------------
+
+    def test_body_invokes_scan_verb(self, parsed: tuple[dict[str, object], str]) -> None:
+        _, body = parsed
+        assert "ai-research scan" in body, (
+            "body must shell out to `ai-research scan raw/` to enumerate "
+            "eligible files"
+        )
+
+    def test_body_scans_raw_directory(self, parsed: tuple[dict[str, object], str]) -> None:
+        _, body = parsed
+        assert "raw/" in body, "body must target the raw/ inbox directory"
+
+    def test_body_loops_inline_not_via_slash_ingest(
+        self, parsed: tuple[dict[str, object], str]
+    ) -> None:
+        """Per technical notes, the loop must call Python verbs directly, NOT /ingest."""
+        _, body = parsed
+        # The body must reference the per-file verbs directly.
+        for verb in ("ai-research extract", "ai-research materialize"):
+            assert verb in body, f"body must call `{verb}` directly per file"
+        # And explicitly avoid re-entering the slash command.
+        assert re.search(r"not.*re-?enter|not.*re-?invoking|NOT.*/ingest", body, re.IGNORECASE), (
+            "body must explicitly document that it does NOT re-invoke /ingest per file"
+        )
+
+    # ------------------------------------------------------------------
+    # Idempotency
+    # ------------------------------------------------------------------
+
+    def test_body_uses_skip_known_for_idempotency(
+        self, parsed: tuple[dict[str, object], str]
+    ) -> None:
+        _, body = parsed
+        assert "--skip-known" in body, (
+            "body must pass --skip-known to scan so already-ingested sources "
+            "are filtered out (idempotency)"
+        )
+
+    def test_body_documents_idempotency_contract(
+        self, parsed: tuple[dict[str, object], str]
+    ) -> None:
+        _, body = parsed
+        assert re.search(r"idempoten", body, re.IGNORECASE), (
+            "body must state the idempotency contract explicitly"
+        )
+
+    def test_body_mentions_mtime_skip(self, parsed: tuple[dict[str, object], str]) -> None:
+        """Files younger than 5s must be deferred to the next tick."""
+        _, body = parsed
+        assert re.search(r"mtime|min-age|5\s*s|5-?second", body, re.IGNORECASE), (
+            "body must document the mtime-based skip for very new files"
+        )
+
+    # ------------------------------------------------------------------
+    # Index rebuild exactly once
+    # ------------------------------------------------------------------
+
+    def test_body_rebuilds_index_exactly_once(
+        self, parsed: tuple[dict[str, object], str]
+    ) -> None:
+        _, body = parsed
+        assert "ai-research index-rebuild" in body, (
+            "body must invoke index-rebuild once at the end"
+        )
+        assert "--skip-index" in body, (
+            "per-file materialize calls must pass --skip-index so the batch "
+            "only rebuilds the index once"
+        )
+        assert re.search(r"once|exactly once", body, re.IGNORECASE), (
+            "body must explicitly pin that index-rebuild runs exactly once"
+        )
+
+    def test_body_index_rebuild_after_loop(
+        self, parsed: tuple[dict[str, object], str]
+    ) -> None:
+        _, body = parsed
+        idx_materialize = body.rfind("ai-research materialize")
+        idx_index = body.rfind("ai-research index-rebuild")
+        assert 0 < idx_materialize < idx_index, (
+            "ai-research index-rebuild must appear after the per-file materialize "
+            "prose — ordering signals the once-at-end contract"
+        )
+
+    # ------------------------------------------------------------------
+    # Failure handling
+    # ------------------------------------------------------------------
+
+    def test_body_documents_partial_failure_continues(
+        self, parsed: tuple[dict[str, object], str]
+    ) -> None:
+        """One bad file must not abort the batch."""
+        _, body = parsed
+        assert re.search(r"continue|do not abort|not abort", body, re.IGNORECASE), (
+            "body must document that per-file failures do not abort the batch"
+        )
+
+    def test_body_documents_empty_inbox_clean_exit(
+        self, parsed: tuple[dict[str, object], str]
+    ) -> None:
+        """Empty raw/ is a clean exit, not an error."""
+        _, body = parsed
+        assert "nothing to ingest" in body, (
+            "body must document the `nothing to ingest` message for empty raw/"
+        )
+
+    # ------------------------------------------------------------------
+    # Structured output
+    # ------------------------------------------------------------------
+
+    def test_body_documents_structured_output(
+        self, parsed: tuple[dict[str, object], str]
+    ) -> None:
+        _, body = parsed
+        for line_key in ("scanned:", "ingested:", "pages:", "index:"):
+            assert line_key in body, (
+                f"output summary missing key `{line_key}` — headless callers parse this"
+            )
+
+    def test_body_reports_failures_in_output(
+        self, parsed: tuple[dict[str, object], str]
+    ) -> None:
+        _, body = parsed
+        assert "failures:" in body or "failed" in body, (
+            "body must surface per-file failures in the output summary"
+        )
+
+
+# ---------------------------------------------------------------------------
 # Contract tests for .claude/commands/ask.md  (Story 03.3-001)
 # ---------------------------------------------------------------------------
 
