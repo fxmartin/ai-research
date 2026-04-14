@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.12"
 authors = [{ name = "FX Martin" }]
 dependencies = [
+    "python-frontmatter>=1.1.0",
     "typer>=0.12.0",
 ]
 
