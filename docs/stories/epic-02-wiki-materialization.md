@@ -122,7 +122,7 @@
 **Technical Notes**: For batches > 10 pages, invoke `index-rebuild` once at the end. Slash commands handle this.
 
 **Definition of Done**:
-- [ ] Unit test verifies the trigger; test verifies `--skip-index`.
+- [x] Unit test verifies the trigger; test verifies `--skip-index`.
 
 **Dependencies**: 02.1-001, 02.2-001
 **Risk Level**: Low
@@ -155,7 +155,7 @@
 - [x] Story 02.1-002 (3 pts)
 - [x] Story 02.1-003 (2 pts)
 - [x] Story 02.2-001 (3 pts)
-- [ ] Story 02.2-002 (2 pts)
+- [x] Story 02.2-002 (2 pts)
 - [x] Story 02.2-003 (3 pts)
 
 **Completed**: 5 / 6 stories · 14 / 16 pts.
