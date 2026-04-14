@@ -31,6 +31,7 @@
 | Epic-03 | Claude Code Slash Commands | Product surface — interactive, `/loop`, and headless `claude -p` parity. | 6 | 17 | MVP (P0) |
 | Epic-04 | Quality, Obsidian Compat & Docs | Golden tests, vault lint, README; shippable v1. | 5 | 11 | MVP (P0) |
 | Epic-05 | Phase 2 — YouTube, Contradictions, Ops | Post-MVP depth: transcripts, contradiction detection, status, background watcher. | 6 | 17 | P1 |
+| Epic-06 | MCP Server for Claude Desktop | Read-only MCP tools (`ask`, `search`, `list_pages`, `get_page`) so Claude Desktop can query the vault over stdio. | 8 | 19 | P1 |
 | NFR | Non-Functional Requirements | Performance, privacy, reliability, scriptability envelopes. | 5 | 8 | MVP / P1 |
 
 ---
@@ -42,6 +43,7 @@
 - **[Epic-03: Claude Code Slash Commands](./stories/epic-03-slash-commands.md)** — `/ingest`, `/ingest-inbox`, `/ask`, JSON contract, headless parity.
 - **[Epic-04: Quality, Obsidian Compat & Docs](./stories/epic-04-quality-docs.md)** — golden tests, Obsidian lint, CI, README.
 - **[Epic-05: Phase 2 — YouTube, Contradictions, Ops](./stories/epic-05-phase-2.md)** — YouTube ingest, contradiction detection, `/status`, launchd template.
+- **[Epic-06: MCP Server for Claude Desktop](./stories/epic-06-mcp-server.md)** — read-only MCP stdio server exposing `ask`, `search`, `list_pages`, `get_page`.
 - **[Non-Functional Requirements](./stories/non-functional-requirements.md)** — performance, privacy, reliability, portability, scriptability.
 
 ---
@@ -73,10 +75,10 @@ Weekend MVP target assumes FX + Claude Code pair-programming; points are on a so
 
 ## Project Metrics
 
-- **Total Stories**: 37 (32 functional + 5 NFR)
-- **Total Story Points**: 88
+- **Total Stories**: 45 (40 functional + 5 NFR)
+- **Total Story Points**: 107
 - **MVP Stories**: 30 (P0)
-- **Phase 2 Stories**: 6 (P1) + 1 NFR
+- **Phase 2 Stories**: 14 (P1 — Epic-05 + Epic-06) + 1 NFR
 - **Estimation scale**: 1 = trivial config, 2 = simple component, 3 = medium multi-component, 5 = complex cross-cutting, 8 = very complex / risky. 13 is a smell — break down.
 
 ---
