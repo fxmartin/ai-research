@@ -102,8 +102,8 @@
 **Technical Notes**: `trafilatura` with `output_format="markdown"`. Archive the fetched HTML to `sources/` alongside the extracted markdown snapshot.
 
 **Definition of Done**:
-- [ ] Unit test with a recorded HTML fixture (no live HTTP in tests).
-- [ ] Integration smoke test hits one real URL behind a `--slow` pytest marker.
+- [x] Unit test with a recorded HTML fixture (no live HTTP in tests).
+- [x] Integration smoke test hits one real URL behind a `--slow` pytest marker.
 
 **Dependencies**: 01.1-001, 01.2-001 (for PDF fallback)
 **Risk Level**: Medium — trafilatura edge cases.
@@ -219,11 +219,11 @@
 - [x] Story 01.1-001 (2 pts)
 - [x] Story 01.1-002 (3 pts)
 - [x] Story 01.2-001 (2 pts)
-- [ ] Story 01.2-002 (3 pts)
+- [x] Story 01.2-002 (3 pts)
 - [x] Story 01.2-003 (1 pt)
 - [ ] Story 01.2-004 (2 pts)
 - [x] Story 01.3-001 (2 pts)
 - [x] Story 01.3-002 (2 pts)
 - [x] Story 01.3-003 (2 pts)
 
-**Completed**: 7 / 9 stories · 14 / 19 pts.
+**Completed**: 8 / 9 stories · 17 / 19 pts.
