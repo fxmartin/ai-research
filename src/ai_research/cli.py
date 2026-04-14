@@ -189,6 +189,11 @@ def materialize(
         "--state-file",
         help="Path to state.json to update with the source_hash → page mapping.",
     ),
+    source_url: str | None = typer.Option(  # noqa: B008
+        None,
+        "--source-url",
+        help="Original URL for web sources; recorded in the ## Sources section.",
+    ),
 ) -> None:
     """Write ``wiki/<slug>.md`` from a draft, atomically, with frontmatter."""
     if draft is None and not read_stdin:
@@ -205,6 +210,7 @@ def materialize(
             wiki_dir=wiki_dir,
             state_path=state_file,
             stdin=sys.stdin if read_stdin else None,
+            source_url=source_url,
         )
     except FileNotFoundError as exc:
         typer.echo(str(exc), err=True)
