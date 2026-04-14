@@ -167,7 +167,7 @@
 **Technical Notes**: Configurable `--min-age-seconds` (default 5).
 
 **Definition of Done**:
-- [ ] Unit tests with mocked mtimes.
+- [x] Unit tests with mocked mtimes.
 
 **Dependencies**: 01.1-002
 **Risk Level**: Low
@@ -222,8 +222,8 @@
 - [ ] Story 01.2-002 (3 pts)
 - [x] Story 01.2-003 (1 pt)
 - [ ] Story 01.2-004 (2 pts)
-- [ ] Story 01.3-001 (2 pts)
+- [x] Story 01.3-001 (2 pts)
 - [x] Story 01.3-002 (2 pts)
 - [ ] Story 01.3-003 (2 pts)
 
-**Completed**: 5 / 9 stories · 10 / 19 pts.
+**Completed**: 6 / 9 stories · 12 / 19 pts.
