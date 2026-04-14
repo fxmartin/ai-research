@@ -47,14 +47,14 @@ ai-research/
 
 Always use `gh` CLI for issues, PRs, releases, API calls.
 
-## LLM Provider
+## LLM Runtime
 
-v1 is **Anthropic-only** (Claude). Use prompt caching on system prompts and stable wiki context. Provider abstraction is deferred to P2 — do not introduce it until a second provider is actually being added.
+v1 is **Claude Code-native**. No Anthropic SDK in the Python toolkit. All LLM work — page drafting, concept extraction, Q&A — happens inside Claude Code, either interactively or headless via `claude -p "<slash-command>"`. Claude Code owns prompt caching, retries, and usage accounting. Provider fallback (OpenAI/Ollama via an SDK layer) is P2 and only added if lock-in bites.
 
 ## Storage Layout
 
 ```
-raw/              # INBOX — drop new files here; watcher drains to sources/
+raw/              # INBOX — drop new files here; drained to sources/
 sources/          # immutable archive (PDF, URL-snapshot, .md, transcript)
   <yyyy>/<mm>/<hash>-<slug>.<ext>
 wiki/             # Obsidian-compatible markdown pages (wikilinks + frontmatter)
@@ -63,24 +63,42 @@ wiki/             # Obsidian-compatible markdown pages (wikilinks + frontmatter)
 .ai-research/
   schema.toml     # wiki structure & page templates
   state.json      # source hashes, page→source index
-  cost.log        # per-command token + USD log
+  index.md        # one-line-per-page retrieval index (rebuilt on materialize)
 .claude/
-  commands/ingest-inbox.md  # /ingest-inbox slash command for /loop orchestration
+  commands/
+    ingest.md        # /ingest <path-or-url>
+    ingest-inbox.md  # /ingest-inbox — batch-drain raw/
+    ask.md           # /ask "<question>" — JSON contract under claude -p
+    status.md        # /status (P1)
 ```
 
 The vault under `wiki/` must remain openable as a pure Obsidian vault with zero tooling.
 
-## Inbox Watcher (v1)
+## Orchestration
 
-v1 uses **Claude Code `/loop` + the project-scoped `/ingest-inbox` command** instead of a daemon. The command lists `raw/`, calls `ai-research ingest` per file, and on success moves each file to `sources/<yyyy>/<mm>/<hash>-<slug>.<ext>`. Auto-ingest only runs while a Claude Code session is open — accepted v1 tradeoff. A launchd agent is a P2 option.
+Three equivalent ways to invoke everything:
+
+1. **Interactive**: open Claude Code in the repo, run `/ingest`, `/ingest-inbox`, `/ask`.
+2. **Self-paced watcher**: `/loop` drives `/ingest-inbox` during a session.
+3. **Headless / scheduled**: `claude -p "/ingest-inbox"` from launchd or cron; `claude -p "/ask 'q'" --output-format json | jq` in shell pipelines.
+
+The Python package `ai-research` is a **deterministic file-ops toolkit** with zero LLM calls: `extract`, `materialize`, `index-rebuild`, `search`, `scan`. Slash commands compose these with Claude Code's native Read/Grep/Write tools.
+
+## Retrieval (`/ask`)
+
+Two-stage, no vector DB in v1:
+1. **Shortlist**: read `.ai-research/index.md` (one line per page: title · tags · 1-line summary · H1 list · outbound-link count), plus optional `ai-research search "<q>"` (rg pre-filter for exact-term queries). Pick 3–8 candidates.
+2. **Answer**: Read full markdown of shortlisted pages → emit answer with `[[page-name]]` citations. Under `claude -p --output-format json`, return `{answer, citations[], confidence}`.
+
+Embeddings and graph-walk expansion (follow `[[wikilinks]]` 1–2 hops) are P2.
 
 ## Testing Strategy
 
-- **Unit**: page CRUD, frontmatter parse, wikilink extraction, idempotency hashing.
-- **Integration**: ingest → wiki page, against recorded Anthropic responses (vcrpy-style) to keep tests deterministic and free.
-- **Golden-file**: fixture vault with a few sources; re-ingest must produce byte-identical output (except timestamps).
-- **Smoke**: Obsidian-compat lint — all wikilinks resolve or point to stubs; frontmatter YAML parses.
-- TDD for business logic (linker, contradiction detection). Authorization required to skip: "I AUTHORIZE YOU TO SKIP WRITING TESTS THIS TIME".
+- **Unit**: Python toolkit verbs — frontmatter parse, atomic write, idempotency hashing, `extract` adapters, `search` rg wrapper, `index-rebuild`.
+- **Golden-file**: fixture vault; running the toolkit verbs against recorded inputs produces byte-identical output (except timestamps).
+- **Smoke**: Obsidian-compat lint on `wiki/` — all wikilinks resolve or point to stubs; frontmatter YAML parses.
+- **Slash commands** (prose, not code): weekly manual smoke test; `/ask` JSON output contract validated by a `claude -p --output-format json` harness test.
+- TDD for all Python toolkit business logic. Authorization required to skip: "I AUTHORIZE YOU TO SKIP WRITING TESTS THIS TIME".
 
 ## CI/CD
 
