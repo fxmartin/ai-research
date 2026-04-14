@@ -34,7 +34,7 @@ class ExtractResult(TypedDict):
     metadata: ExtractMetadata
 
 
-def extract_markdown(path: str | Path) -> ExtractResult:
+def extract_markdown(path: str | Path) -> dict[str, Any]:
     """Extract a local markdown / text file into an ``{text, metadata}`` record.
 
     The file bytes are returned untouched under ``text`` to preserve any
