@@ -101,7 +101,8 @@
 **Technical Notes**: Mostly documentation and a manual smoke-test checklist in the README.
 
 **Definition of Done**:
-- [ ] Checklist added to README.
+- [x] Checklist added to README.
+- [x] `TestLoopCompat` contract tests guard the /loop spec in `tests/test_slash_commands.py`.
 - [ ] One-pass manual smoke test recorded.
 
 **Dependencies**: 03.2-001
@@ -162,8 +163,8 @@
 - [x] Story 03.1-001 (5 pts)
 - [x] Story 03.1-002 (2 pts)
 - [x] Story 03.2-001 (3 pts)
-- [ ] Story 03.2-002 (1 pt)
+- [x] Story 03.2-002 (1 pt)
 - [x] Story 03.3-001 (5 pts)
 - [x] Story 03.3-002 (1 pt)
 
-**Completed**: 5 / 6 stories · 16 / 17 pts.
+**Completed**: 6 / 6 stories · 17 / 17 pts.
