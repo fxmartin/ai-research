@@ -19,14 +19,54 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
 from ai_research.archive import slugify
 
 __all__ = [
     "AskPayloadError",
+    "AskResponse",
     "CitationCheckResult",
     "check_citations",
     "normalize_citation",
 ]
+
+
+_BARE_PAGE_RE = re.compile(r"^[^\[\]|#/\\.]+$")
+
+
+class AskResponse(BaseModel):
+    """Pydantic model of the ``/ask`` JSON contract (Story 04.1-002).
+
+    The ``/ask`` slash command, when invoked under
+    ``claude -p --output-format json``, emits exactly this shape on stdout::
+
+        {"answer": "...", "citations": ["page-name", ...], "confidence": 0.0}
+
+    - ``answer``: free-form string; empty string is legal (empty vault).
+    - ``citations``: list of bare page names. No brackets, no ``.md``, no path
+      components, no alias (``|``) or anchor (``#``) segments.
+    - ``confidence``: float in the half-open interval ``[0.0, 1.0)``. ``1.0``
+      is reserved for formal proofs per the slash-command spec.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    answer: str
+    citations: list[str]
+    confidence: float = Field(ge=0.0, lt=1.0)
+
+    @field_validator("citations")
+    @classmethod
+    def _validate_citation_shape(cls, value: list[str]) -> list[str]:
+        for entry in value:
+            if not isinstance(entry, str) or not entry.strip():
+                raise ValueError(f"citation must be a non-empty string: {entry!r}")
+            if not _BARE_PAGE_RE.match(entry):
+                raise ValueError(
+                    f"citation must be a bare page name (no brackets/anchor/alias/path): {entry!r}"
+                )
+        return value
 
 
 _WIKILINK_RE = re.compile(r"^\[\[(?P<inner>.*)\]\]$")

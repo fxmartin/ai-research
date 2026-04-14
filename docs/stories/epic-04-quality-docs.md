@@ -54,7 +54,7 @@
 **Technical Notes**: Marked `@pytest.mark.slow` — only runs in pre-commit smoke or nightly. Pins a Claude model via slash-command frontmatter when possible.
 
 **Definition of Done**:
-- [ ] Harness test file committed.
+- [x] Harness test file committed.
 - [ ] CI workflow invokes it under a `nightly` job.
 
 **Dependencies**: 03.3-001, 03.3-002, 04.1-001
@@ -136,9 +136,9 @@
 ## Epic Progress
 
 - [x] Story 04.1-001 (3 pts)
-- [ ] Story 04.1-002 (3 pts)
+- [x] Story 04.1-002 (3 pts)
 - [x] Story 04.2-001 (3 pts)
 - [ ] Story 04.3-001 (1 pt)
 - [ ] Story 04.3-002 (1 pt)
 
-**Completed**: 2 / 5 stories · 6 / 11 pts.
+**Completed**: 3 / 5 stories · 9 / 11 pts.
