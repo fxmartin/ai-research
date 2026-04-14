@@ -220,13 +220,22 @@ def materialize(  # noqa: PLR0913 — CLI-shaped keyword API, not hot path.
 
     page_path = Path(wiki_dir) / f"{slug}.md"
 
-    # Merge ``## Sources`` back-reference (Story 02.2-003). We read any
-    # existing page off disk so re-materialization preserves prior sources
-    # rather than dropping them (idempotent + additive by path).
+    # Merge ``## Sources`` back-reference (Story 02.2-003). Start with the draft
+    # body and merge any prior sources from an existing page so re-materialization
+    # with a new source appends rather than replacing.
     source_rel = _page_relative_source_path(source, wiki_dir)
     entry = SourceEntry(title=title, path=source_rel, url=source_url)
+    # Graft prior sources into draft before merging the new one.
+    base_body = post.content
     existing_body = _read_existing_body(page_path)
-    base_body = existing_body if existing_body is not None else post.content
+    if existing_body is not None:
+        _, prior_bullets = _split_body_for_sources(existing_body)
+        if prior_bullets:
+            # Preserve existing sources: merge them into the draft body first.
+            for line in prior_bullets:
+                parsed = _parse_entry(line)
+                if parsed is not None and parsed.path != source_rel:
+                    base_body = merge_sources_section(base_body, parsed)
     post.content = merge_sources_section(base_body, entry)
     payload = frontmatter.dumps(post).encode("utf-8")
     if not payload.endswith(b"\n"):
@@ -253,6 +262,25 @@ def materialize(  # noqa: PLR0913 — CLI-shaped keyword API, not hot path.
         slug=slug,
         status=status,
     )
+
+
+def _split_body_for_sources(body: str) -> tuple[str, list[str]]:
+    """Split body into (text-above-Sources, existing-bullet-lines).
+
+    This is a helper for materialize to extract prior source entries
+    for preservation during re-materialization. Delegates to sources module.
+    """
+    from ai_research.wiki.sources import _split_body
+    return _split_body(body)
+
+
+def _parse_entry(line: str) -> SourceEntry | None:
+    """Parse a bullet line into a SourceEntry; return None if it doesn't match.
+
+    Helper for materialize to parse existing sources for preservation.
+    """
+    from ai_research.wiki.sources import _parse_entry as sources_parse_entry
+    return sources_parse_entry(line)
 
 
 def _read_existing_body(page_path: Path) -> str | None:
