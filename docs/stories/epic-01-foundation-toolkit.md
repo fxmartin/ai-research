@@ -187,7 +187,7 @@
 **Technical Notes**: Shell out to `rg --json`; parse and re-emit a stable schema.
 
 **Definition of Done**:
-- [ ] Unit test with a fixture `wiki/`.
+- [x] Unit test with a fixture `wiki/`.
 
 **Dependencies**: 01.1-001
 **Risk Level**: Low
@@ -223,7 +223,7 @@
 - [x] Story 01.2-003 (1 pt)
 - [ ] Story 01.2-004 (2 pts)
 - [ ] Story 01.3-001 (2 pts)
-- [ ] Story 01.3-002 (2 pts)
+- [x] Story 01.3-002 (2 pts)
 - [ ] Story 01.3-003 (2 pts)
 
-**Completed**: 3 / 9 stories · 5 / 19 pts.
+**Completed**: 4 / 9 stories · 7 / 19 pts.

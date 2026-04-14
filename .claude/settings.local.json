@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git pull:*)",
+      "Bash(gh auth:*)",
+      "Bash(~/.claude/hooks/cmux-bridge.sh status:*)",
+      "Bash(~/.claude/hooks/cmux-bridge.sh log:*)",
+      "Bash(~/.claude/hooks/cmux-bridge.sh progress:*)",
+      "Bash(~/.claude/hooks/cmux-bridge.sh telegram:*)",
+      "Bash(uv sync:*)",
+      "Bash(uv python:*)",
+      "Bash(uv run:*)",
+      "Bash(uv tool:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(uv pip:*)",
+      "Bash(uv add:*)",
+      "Bash(git:*)",
+      "Bash(gh pr:*)",
+      "Bash(~/.claude/hooks/cmux-bridge.sh clear:*)"
+    ]
+  }
+}

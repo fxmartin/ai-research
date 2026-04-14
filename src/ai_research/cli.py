@@ -1,9 +1,10 @@
 """Typer CLI entry point for ai-research.
 
-Additional verbs (materialize, search, scan, ...) will be registered here by
-subsequent stories. For now this provides the skeleton plus `version` and
-extract adapters for markdown and PDF (Stories 01.2-001 and 01.2-003);
-the unified dispatcher (Story 01.2-004) will add URL routing.
+Additional verbs (materialize, scan, ...) will be registered here by
+subsequent stories. For now this provides the skeleton plus `version`,
+extract adapters for markdown and PDF (Stories 01.2-001 and 01.2-003),
+and search over wiki/ (Story 01.3-002).
+The unified dispatcher (Story 01.2-004) will add URL routing.
 """
 
 from __future__ import annotations
@@ -21,6 +22,7 @@ from ai_research.extract.pdf import (
     PdftotextNotFoundError,
     extract_pdf,
 )
+from ai_research.search import run_search
 
 app = typer.Typer(
     name="ai-research",
@@ -85,6 +87,34 @@ def extract(
 
     json.dump(result, sys.stdout, ensure_ascii=False)
     sys.stdout.write("\n")
+
+
+@app.command("search")
+def search(
+    query: str = typer.Argument(..., help="Pattern passed to ripgrep."),  # noqa: B008
+    wiki_dir: Path = typer.Option(  # noqa: B008
+        Path("wiki"),
+        "--wiki-dir",
+        help="Root of the wiki vault to search.",
+    ),
+    limit: int | None = typer.Option(  # noqa: B008
+        None,
+        "--limit",
+        "-n",
+        min=1,
+        help="Maximum number of hits to emit.",
+    ),
+) -> None:
+    """Run ripgrep over the wiki and emit JSON hits as `[{page, line, snippet}]`."""
+    try:
+        hits = run_search(query, wiki_dir=wiki_dir, limit=limit)
+    except FileNotFoundError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=2) from exc
+    except RuntimeError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    typer.echo(json.dumps([h.to_dict() for h in hits]))
 
 
 if __name__ == "__main__":  # pragma: no cover
