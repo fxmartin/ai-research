@@ -143,7 +143,7 @@
 **Technical Notes**: Registry pattern in `extract/__init__.py`.
 
 **Definition of Done**:
-- [ ] Dispatch table unit-tested.
+- [x] Dispatch table unit-tested.
 
 **Dependencies**: 01.2-001, 01.2-002, 01.2-003
 **Risk Level**: Low
@@ -221,9 +221,9 @@
 - [x] Story 01.2-001 (2 pts)
 - [x] Story 01.2-002 (3 pts)
 - [x] Story 01.2-003 (1 pt)
-- [ ] Story 01.2-004 (2 pts)
+- [x] Story 01.2-004 (2 pts)
 - [x] Story 01.3-001 (2 pts)
 - [x] Story 01.3-002 (2 pts)
 - [x] Story 01.3-003 (2 pts)
 
-**Completed**: 8 / 9 stories · 17 / 19 pts.
+**Completed**: 9 / 9 stories · 19 / 19 pts.
