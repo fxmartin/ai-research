@@ -2,11 +2,59 @@ name: CI
 
 on:
   push:
+    branches: [main]
   pull_request:
+  schedule:
+    # Nightly at 06:17 UTC — runs the full test suite including slow tests.
+    - cron: "17 6 * * *"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   quality:
+    name: Lint, Types, Tests (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        python-version: ["3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Sync dependencies
+        run: uv sync --all-extras --dev
+
+      - name: Lint (ruff check)
+        run: uv run ruff check .
+
+      - name: Format check (ruff format --check)
+        run: uv run ruff format --check .
+
+      - name: Type-check (pyright)
+        run: uv run pyright
+
+      - name: Test (pytest, not slow)
+        if: github.event_name != 'schedule'
+        run: uv run pytest -m "not slow"
+
+      - name: Test (pytest, full suite incl. slow)
+        if: github.event_name == 'schedule'
+        run: uv run pytest
+
+  vault-lint:
+    name: Vault Lint (fixture + wiki/)
+    runs-on: ubuntu-latest
+    needs: quality
+    if: github.event_name == 'push' || github.event_name == 'schedule'
     steps:
       - uses: actions/checkout@v4
 
@@ -14,15 +62,24 @@ jobs:
         uses: astral-sh/setup-uv@v5
         with:
           python-version: "3.12"
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
 
       - name: Sync dependencies
         run: uv sync
 
-      - name: Lint (ruff)
-        run: uv run ruff check .
+      - name: Vault-lint fixture vault (if present)
+        run: |
+          if [ -d tests/fixtures/vault ]; then
+            uv run ai-research vault-lint tests/fixtures/vault/
+          else
+            echo "No fixture vault at tests/fixtures/vault — skipping."
+          fi
 
-      - name: Type-check (pyright)
-        run: uv run pyright
-
-      - name: Test (pytest)
-        run: uv run pytest
+      - name: Vault-lint wiki/ (if present)
+        run: |
+          if [ -d wiki ]; then
+            uv run ai-research vault-lint wiki/
+          else
+            echo "No wiki/ directory — skipping."
+          fi

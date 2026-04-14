@@ -22,7 +22,7 @@ COMMANDS_DIR = REPO_ROOT / ".claude" / "commands"
 def _load(name: str) -> frontmatter.Post:
     path = COMMANDS_DIR / name
     assert path.exists(), f"slash command missing: {path}"
-    return frontmatter.load(path)
+    return frontmatter.load(str(path))
 
 
 def _split_frontmatter(text: str) -> tuple[dict[str, object], str]:
@@ -471,8 +471,9 @@ class TestAskCommand:
         assert post.metadata, "frontmatter did not parse or is empty"
 
     def test_frontmatter_has_description(self, post: frontmatter.Post) -> None:
-        assert isinstance(post.metadata.get("description"), str)
-        assert post.metadata["description"].strip()
+        description = post.metadata.get("description")
+        assert isinstance(description, str)
+        assert description.strip()
 
     def test_frontmatter_has_argument_hint(self, post: frontmatter.Post) -> None:
         assert "argument-hint" in post.metadata
