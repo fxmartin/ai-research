@@ -31,3 +31,4 @@ htmlcov/
 # Project
 /wiki-data/
 /sources/
+.claude/

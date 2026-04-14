@@ -14,6 +14,7 @@ from ai_research.cli import app
 from ai_research.extract.pdf import (
     PdfExtractionError,
     PdftotextNotFoundError,
+    _count_pages,
     extract_pdf,
 )
 
@@ -93,8 +94,6 @@ def test_cli_extract_pdf_missing_binary_message(tmp_path: Path) -> None:
 # ---------------------------------------------------------------------------
 # Coverage gap tests — added by QA gate (Story 01.2-001)
 # ---------------------------------------------------------------------------
-
-from ai_research.extract.pdf import _count_pages
 
 
 def test_count_pages_empty_text_returns_zero() -> None:
