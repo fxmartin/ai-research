@@ -2,9 +2,8 @@
 
 Additional verbs (materialize, scan, ...) will be registered here by
 subsequent stories. For now this provides the skeleton plus `version`,
-extract adapters for markdown and PDF (Stories 01.2-001 and 01.2-003),
-and search over wiki/ (Story 01.3-002).
-The unified dispatcher (Story 01.2-004) will add URL routing.
+the unified extract dispatcher (Story 01.2-004) covering PDF / markdown /
+URL sources, and search over wiki/ (Story 01.3-002).
 """
 
 from __future__ import annotations
@@ -16,13 +15,15 @@ from pathlib import Path
 import typer
 
 from ai_research import __version__
-from ai_research.extract.markdown import SUPPORTED_SUFFIXES, extract_markdown
-from ai_research.extract.pdf import (
+from ai_research.extract import (
     PdfExtractionError,
     PdftotextNotFoundError,
-    extract_pdf,
+    UnsupportedSourceError,
+    UrlExtractionError,
 )
-from ai_research.extract.url import UrlExtractionError, extract_url
+from ai_research.extract import (
+    extract as extract_dispatch,
+)
 from ai_research.scan import DEFAULT_MIN_AGE_SECONDS, scan_raw
 from ai_research.search import run_search
 from ai_research.state import load_state
@@ -52,52 +53,33 @@ def version() -> None:
 
 @app.command("extract")
 def extract(
-    source: str = typer.Argument(..., help="Path to a source file (PDF, markdown, or text)."),
+    source: str = typer.Argument(
+        ..., help="Path or URL to a source (PDF, markdown, text, or http[s]://)."
+    ),
 ) -> None:
     """Extract a source artifact into a ``{text, metadata}`` JSON record.
 
-    Supports PDF (.pdf), markdown (.md, .markdown), and plain text (.txt).
-    The unified dispatcher (Story 01.2-004) will add URL support.
+    Routing is delegated to :func:`ai_research.extract.extract`:
+
+    * ``http://`` / ``https://`` URLs → URL adapter
+    * ``.pdf`` → PDF adapter
+    * ``.md`` / ``.markdown`` / ``.txt`` → markdown adapter
+    * anything else → exit code 2 with a supported-types message.
     """
-    # URL dispatch (Story 01.2-002) — precedes path-based suffix routing.
-    if source.startswith(("http://", "https://")):
-        try:
-            result = extract_url(source)
-        except UrlExtractionError as exc:
-            typer.echo(f"extract: {exc}", err=True)
-            raise typer.Exit(code=1) from exc
-        json.dump(result, sys.stdout, ensure_ascii=False)
-        sys.stdout.write("\n")
-        return
-
-    src_path = Path(source)
-    suffix = src_path.suffix.lower()
-
-    # Dispatch by extension
-    if suffix == ".pdf":
-        # PDF extractor (Story 01.2-001)
-        try:
-            result = extract_pdf(src_path)
-        except PdftotextNotFoundError as exc:
-            typer.echo(str(exc), err=True)
-            raise typer.Exit(code=2) from exc
-        except PdfExtractionError as exc:
-            typer.echo(f"extract: {exc}", err=True)
-            raise typer.Exit(code=1) from exc
-    elif suffix in SUPPORTED_SUFFIXES:
-        # Markdown/text extractor (Story 01.2-003)
-        try:
-            result = extract_markdown(src_path)
-        except FileNotFoundError as exc:
-            typer.echo(str(exc), err=True)
-            raise typer.Exit(code=1) from exc
-    else:
-        typer.echo(
-            f"Unsupported source type {suffix!r}. "
-            f"Supported: .pdf, {', '.join(sorted(SUPPORTED_SUFFIXES))}.",
-            err=True,
-        )
-        raise typer.Exit(code=2)
+    try:
+        result = extract_dispatch(source)
+    except UnsupportedSourceError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=2) from exc
+    except PdftotextNotFoundError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=2) from exc
+    except (PdfExtractionError, UrlExtractionError) as exc:
+        typer.echo(f"extract: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+    except FileNotFoundError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
 
     json.dump(result, sys.stdout, ensure_ascii=False)
     sys.stdout.write("\n")

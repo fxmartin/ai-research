@@ -133,14 +133,16 @@ def test_run_search_skips_blank_and_invalid_json_lines(fixture_wiki: Path) -> No
 
     def fake_run(*args, **kwargs):  # type: ignore[no-untyped-def]
         # Mix: blank line, invalid JSON, then a valid match event
-        valid_match = json.dumps({
-            "type": "match",
-            "data": {
-                "path": {"text": "wiki/alpha.md"},
-                "lines": {"text": "The quick brown foo jumps.\n"},
-                "line_number": 3,
-            },
-        })
+        valid_match = json.dumps(
+            {
+                "type": "match",
+                "data": {
+                    "path": {"text": "wiki/alpha.md"},
+                    "lines": {"text": "The quick brown foo jumps.\n"},
+                    "line_number": 3,
+                },
+            }
+        )
         stdout = "\n" + "not-json-at-all\n" + valid_match + "\n"
         return subprocess.CompletedProcess(args[0], returncode=0, stdout=stdout, stderr="")
 
@@ -172,22 +174,26 @@ def test_run_search_skips_match_with_missing_page_or_line(fixture_wiki: Path) ->
 
     def fake_run(*args, **kwargs):  # type: ignore[no-untyped-def]
         # Missing page text (bytes form → _extract_text returns "")
-        no_page = json.dumps({
-            "type": "match",
-            "data": {
-                "path": {"bytes": "aGVsbG8="},
-                "lines": {"text": "something\n"},
-                "line_number": 1,
-            },
-        })
+        no_page = json.dumps(
+            {
+                "type": "match",
+                "data": {
+                    "path": {"bytes": "aGVsbG8="},
+                    "lines": {"text": "something\n"},
+                    "line_number": 1,
+                },
+            }
+        )
         # Missing line_number
-        no_line = json.dumps({
-            "type": "match",
-            "data": {
-                "path": {"text": "wiki/alpha.md"},
-                "lines": {"text": "something\n"},
-            },
-        })
+        no_line = json.dumps(
+            {
+                "type": "match",
+                "data": {
+                    "path": {"text": "wiki/alpha.md"},
+                    "lines": {"text": "something\n"},
+                },
+            }
+        )
         stdout = no_page + "\n" + no_line + "\n"
         return subprocess.CompletedProcess(args[0], returncode=0, stdout=stdout, stderr="")
 
