@@ -45,7 +45,10 @@ typeCheckingMode = "basic"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "--cov=ai_research --cov-branch --cov-report=term-missing"
+addopts = ["--cov=ai_research", "--cov-branch", "--cov-report=term-missing", "-m", "not slow"]
+markers = [
+    "slow: marks tests as slow (e.g. shell out to claude CLI); deselected by default, run with -m slow or --run-slow",
+]
 
 [tool.coverage.run]
 source = ["ai_research"]
