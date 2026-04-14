@@ -31,5 +31,6 @@ htmlcov/
 # Project
 /wiki-data/
 /sources/
-.claude/
+.claude/*
+!.claude/commands/
 .ai-research/index.md
