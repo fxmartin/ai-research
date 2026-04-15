@@ -26,6 +26,7 @@ def test_render_sources_section_single_file_entry() -> None:
 
 
 def test_render_sources_section_url_entry_includes_original_url() -> None:
+    """Pre-Epic-07 record (``archive_path=None``) with a URL emits URL-only."""
     entries = [
         SourceEntry(
             title="Karpathy LLM Wiki",
@@ -35,8 +36,9 @@ def test_render_sources_section_url_entry_includes_original_url() -> None:
     ]
     out = render_sources_section(entries)
     assert "## Sources\n" in out
-    assert "[Karpathy LLM Wiki](sources/2026/04/cd34-karpathy.md)" in out
-    assert "https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f" in out
+    assert "- URL: https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f" in out
+    # No orphan Archive bullet when archive_path is None.
+    assert "Archive:" not in out
 
 
 def test_merge_sources_section_appends_to_body_without_existing_section() -> None:
@@ -80,6 +82,7 @@ def test_merge_sources_section_preserves_user_body_after_existing_section() -> N
 
 
 def test_merge_sources_section_url_entry_includes_url_on_append() -> None:
+    """URL-only entry (archive_path=None) appends as a single URL bullet."""
     body = "# Title\n\nBody.\n"
     entry = SourceEntry(
         title="Karpathy Gist",
@@ -88,8 +91,150 @@ def test_merge_sources_section_url_entry_includes_url_on_append() -> None:
     )
     out = merge_sources_section(body, entry)
     assert "## Sources" in out
-    assert "[Karpathy Gist](sources/2026/04/xx-gist.md)" in out
-    assert "https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f" in out
+    assert "- URL: https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f" in out
+    assert "Archive:" not in out
+
+
+# ---------------------------------------------------------------------------
+# Story 08.1-001 — Dual-bullet rendering (URL + Archive)
+# ---------------------------------------------------------------------------
+
+
+def test_render_dual_bullet_url_and_archive() -> None:
+    """URL + archive_path → two bullets, URL first, Archive second."""
+    entry = SourceEntry(
+        title="Foo",
+        path="sources/2026/04/abcdef-foo.pdf",
+        url="https://example.com/foo",
+        archive_path="sources/2026/04/abcdef-foo.pdf",
+    )
+    out = render_sources_section([entry])
+    assert out == (
+        "## Sources\n"
+        "- URL: https://example.com/foo\n"
+        "- Archive: [sources/2026/04/abcdef-foo.pdf](sources/2026/04/abcdef-foo.pdf)\n"
+    )
+
+
+def test_render_archive_only_no_url() -> None:
+    """PDF source with no URL → only the Archive bullet is emitted."""
+    entry = SourceEntry(
+        title="Opus Card",
+        path="sources/2026/02/deadbeef-opus.pdf",
+        url=None,
+        archive_path="sources/2026/02/deadbeef-opus.pdf",
+    )
+    out = render_sources_section([entry])
+    assert out == (
+        "## Sources\n"
+        "- Archive: [sources/2026/02/deadbeef-opus.pdf](sources/2026/02/deadbeef-opus.pdf)\n"
+    )
+    assert "URL:" not in out
+
+
+def test_render_url_only_legacy_archive_path_none() -> None:
+    """archive_path=None + url set → only the URL bullet (no orphan Archive)."""
+    entry = SourceEntry(
+        title="Legacy Web",
+        path="sources/2026/04/xx-legacy.md",
+        url="https://example.com/legacy",
+        archive_path=None,
+    )
+    out = render_sources_section([entry])
+    assert "- URL: https://example.com/legacy" in out
+    assert "Archive:" not in out
+
+
+def test_parse_round_trip_dual_bullet() -> None:
+    """Dual-bullet rendering parses back into an entry with both fields."""
+    entry = SourceEntry(
+        title="Foo",
+        path="sources/2026/04/abcdef-foo.pdf",
+        url="https://example.com/foo",
+        archive_path="sources/2026/04/abcdef-foo.pdf",
+    )
+    body = "# T\n\nBody.\n"
+    rendered = merge_sources_section(body, entry)
+    # Re-merging the identical entry is a no-op (idempotent round-trip via parser).
+    twice = merge_sources_section(rendered, entry)
+    assert rendered == twice
+    # Both bullets present exactly once.
+    assert rendered.count("- URL: https://example.com/foo") == 1
+    assert (
+        rendered.count(
+            "- Archive: [sources/2026/04/abcdef-foo.pdf](sources/2026/04/abcdef-foo.pdf)"
+        )
+        == 1
+    )
+
+
+def test_merge_two_dual_bullet_sources_preserves_both_pairs() -> None:
+    """Re-materializing with an additional source yields two URL+Archive pairs."""
+    body = "# T\n\nBody.\n"
+    first = SourceEntry(
+        title="First",
+        path="sources/2026/04/aaa-first.pdf",
+        url="https://example.com/first",
+        archive_path="sources/2026/04/aaa-first.pdf",
+    )
+    second = SourceEntry(
+        title="Second",
+        path="sources/2026/04/bbb-second.pdf",
+        url="https://example.com/second",
+        archive_path="sources/2026/04/bbb-second.pdf",
+    )
+    step1 = merge_sources_section(body, first)
+    step2 = merge_sources_section(step1, second)
+
+    # Exactly one heading.
+    assert step2.count("## Sources") == 1
+    # Both URL bullets.
+    assert "- URL: https://example.com/first" in step2
+    assert "- URL: https://example.com/second" in step2
+    # Both Archive bullets.
+    assert "- Archive: [sources/2026/04/aaa-first.pdf](sources/2026/04/aaa-first.pdf)" in step2
+    assert "- Archive: [sources/2026/04/bbb-second.pdf](sources/2026/04/bbb-second.pdf)" in step2
+    # Ordering: first URL/Archive pair precedes the second URL/Archive pair.
+    first_url_idx = step2.index("- URL: https://example.com/first")
+    first_arch_idx = step2.index("sources/2026/04/aaa-first.pdf](")
+    second_url_idx = step2.index("- URL: https://example.com/second")
+    assert first_url_idx < first_arch_idx < second_url_idx
+
+
+def test_merge_dual_bullet_idempotent_by_archive_path() -> None:
+    """Re-merging a source with the same archive_path is a no-op."""
+    entry = SourceEntry(
+        title="Foo",
+        path="sources/2026/04/abcdef-foo.pdf",
+        url="https://example.com/foo",
+        archive_path="sources/2026/04/abcdef-foo.pdf",
+    )
+    body = "# T\n\nBody.\n"
+    once = merge_sources_section(body, entry)
+    twice = merge_sources_section(once, entry)
+    assert once == twice
+
+
+def test_legacy_single_bullet_still_parses_on_merge() -> None:
+    """Existing pages with pre-Epic-08 single-bullet sources round-trip safely."""
+    # Legacy-shaped body: single bullet with title + path + parenthesised URL.
+    body = (
+        "# T\n\nBody.\n\n"
+        "## Sources\n"
+        "- [Old Title](sources/2026/04/legacy.pdf) (https://example.com/old)\n"
+    )
+    new_entry = SourceEntry(
+        title="New",
+        path="sources/2026/04/new.pdf",
+        url="https://example.com/new",
+        archive_path="sources/2026/04/new.pdf",
+    )
+    out = merge_sources_section(body, new_entry)
+    # Legacy entry preserved (re-rendered in whatever shape the parser picks —
+    # key thing is it isn't dropped and isn't duplicated).
+    assert "https://example.com/old" in out
+    assert "- URL: https://example.com/new" in out
+    assert "- Archive: [sources/2026/04/new.pdf](sources/2026/04/new.pdf)" in out
 
 
 def test_merge_sources_section_matches_by_path_not_title() -> None:
