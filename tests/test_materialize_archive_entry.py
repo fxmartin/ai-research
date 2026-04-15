@@ -108,3 +108,47 @@ def test_no_archive_flag_emits_url_only(tmp_path: Path) -> None:
     body = _body_of(result.page_path)
     assert "- URL: https://example.com/foo" in body
     assert "- Archive:" not in body
+
+
+def test_frontmatter_source_points_to_archive_path_after_archive(tmp_path: Path) -> None:
+    """#45: post-archive, frontmatter `source:` must point at the archived file,
+    not the now-missing wiki/raw/ path."""
+    raw, wiki, state_path = _vault(tmp_path)
+    src = raw / "foo.md"
+    src.write_text("raw bytes\n", encoding="utf-8")
+    draft = _draft(tmp_path)
+
+    result = materialize(
+        source=src,
+        draft_path=draft,
+        wiki_dir=wiki,
+        state_path=state_path,
+        now=FIXED_NOW,
+    )
+    assert result.status is MaterializeStatus.CREATED
+
+    post = frontmatter.loads(result.page_path.read_text(encoding="utf-8"))
+    src_value = str(post["source"])
+    assert src_value.startswith("sources/"), f"expected archive path, got {src_value!r}"
+    assert src_value.endswith("-foo.md")
+    # And the archive file really exists at that path (vault-root-relative).
+    assert (wiki.parent / src_value).exists()
+
+
+def test_frontmatter_source_keeps_raw_path_when_no_archive(tmp_path: Path) -> None:
+    """Sanity check: with --no-archive, `source:` remains the original path."""
+    raw, wiki, state_path = _vault(tmp_path)
+    src = raw / "bar.md"
+    src.write_text("raw bytes\n", encoding="utf-8")
+    draft = _draft(tmp_path)
+
+    result = materialize(
+        source=src,
+        draft_path=draft,
+        wiki_dir=wiki,
+        state_path=state_path,
+        now=FIXED_NOW,
+        no_archive=True,
+    )
+    post = frontmatter.loads(result.page_path.read_text(encoding="utf-8"))
+    assert str(post["source"]) == str(src)

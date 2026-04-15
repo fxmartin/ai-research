@@ -312,3 +312,58 @@ def test_empty_sources_section_ambiguous_multi_source_not_seeded(tmp_path: Path)
 
     assert [r.outcome for r in results] == [RewriteOutcome.UNCHANGED]
     assert (wiki_dir / "multi.md").read_bytes() == before
+
+
+def test_fix_frontmatter_rewrites_source_line(tmp_path: Path) -> None:
+    """#45: --fix-frontmatter rewrites `source:` to the archive_path."""
+    wiki_dir, state_file = _make_vault(tmp_path)
+    body = (
+        "# Foo\n\nBody.\n\n## Sources\n"
+        "- URL: https://example.com/foo\n"
+        "- Archive: [hf-foo.md](sources/2026/04/hf-foo.md)\n"
+    )
+    # Frontmatter has the stale wiki/raw/ source path.
+    _write_page(
+        wiki_dir / "foo.md",
+        "title: Foo\nsource: /old/wiki/raw/foo.md\nsource_hash: hf\nlocked: false\n",
+        body,
+    )
+    state = State(
+        sources={"hf": SourceRecord(page="wiki/foo.md", archive_path="sources/2026/04/hf-foo.md")},
+        pages={"wiki/foo.md": ["hf"]},
+    )
+    save_state(state_file, state)
+
+    results = rewrite_sources(wiki_dir=wiki_dir, state_path=state_file, fix_frontmatter=True)
+    assert [r.outcome for r in results] == [RewriteOutcome.UPDATED]
+
+    text = (wiki_dir / "foo.md").read_text(encoding="utf-8")
+    assert "source: sources/2026/04/hf-foo.md" in text
+    assert "/old/wiki/raw/foo.md" not in text
+    # Other frontmatter keys preserved.
+    assert "title: Foo" in text
+    assert "source_hash: hf" in text
+
+
+def test_fix_frontmatter_opt_in_is_noop_without_flag(tmp_path: Path) -> None:
+    """Without --fix-frontmatter, the source: line is preserved verbatim."""
+    wiki_dir, state_file = _make_vault(tmp_path)
+    body = (
+        "# Foo\n\nBody.\n\n## Sources\n"
+        "- URL: https://example.com/foo\n"
+        "- Archive: [hf-foo.md](sources/2026/04/hf-foo.md)\n"
+    )
+    _write_page(
+        wiki_dir / "foo.md",
+        "title: Foo\nsource: /old/wiki/raw/foo.md\nsource_hash: hf\nlocked: false\n",
+        body,
+    )
+    state = State(
+        sources={"hf": SourceRecord(page="wiki/foo.md", archive_path="sources/2026/04/hf-foo.md")},
+        pages={"wiki/foo.md": ["hf"]},
+    )
+    save_state(state_file, state)
+
+    before = (wiki_dir / "foo.md").read_bytes()
+    rewrite_sources(wiki_dir=wiki_dir, state_path=state_file)
+    assert (wiki_dir / "foo.md").read_bytes() == before

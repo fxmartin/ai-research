@@ -250,13 +250,6 @@ def materialize(  # noqa: PLR0913 — CLI-shaped keyword API, not hot path.
         preserved_locked = False
         status = MaterializeStatus.CREATED
 
-    # Toolkit-owned metadata always wins over draft frontmatter.
-    post["title"] = title
-    post["source"] = str(source)
-    post["ingested_at"] = timestamp.isoformat()
-    post["source_hash"] = source_hash
-    post["locked"] = preserved_locked
-
     page_path = Path(wiki_dir) / f"{slug}.md"
 
     # Merge ``## Sources`` back-reference (Story 02.2-003). Start with the draft
@@ -276,6 +269,16 @@ def materialize(  # noqa: PLR0913 — CLI-shaped keyword API, not hot path.
             now=timestamp,
         )
         archive_rel_for_entry = _vault_relative_archive_path(projected_archive, wiki_dir)
+
+    # Toolkit-owned metadata always wins over draft frontmatter. Use the
+    # projected archive path for `source:` so the frontmatter pointer stays
+    # valid after archive-on-ingest (#45). Falls back to the original path
+    # when --no-archive is in effect.
+    post["title"] = title
+    post["source"] = archive_rel_for_entry if archive_rel_for_entry else str(source)
+    post["ingested_at"] = timestamp.isoformat()
+    post["source_hash"] = source_hash
+    post["locked"] = preserved_locked
     entry = SourceEntry(
         title=title,
         path=source_rel,

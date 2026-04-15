@@ -188,12 +188,34 @@ def _page_hashes(
     return []
 
 
+def _fix_frontmatter_source_line(fm_block: str, archive_path: str) -> str:
+    """Rewrite the ``source:`` line inside a raw frontmatter block.
+
+    Preserves every other byte of ``fm_block`` — only the value of the single
+    top-level ``source:`` key changes. Matches the exact line prefix the
+    python-frontmatter dumper emits so round-trip is stable.
+
+    Returns ``fm_block`` unchanged when no top-level ``source:`` line is found.
+    """
+    lines = fm_block.splitlines(keepends=True)
+    for i, line in enumerate(lines):
+        # Top-level key only (no leading whitespace); match `source:` or
+        # `source: <anything>` — rewrite everything after the colon.
+        stripped = line.rstrip("\n\r")
+        if stripped == "source:" or stripped.startswith("source: "):
+            newline = "\n" if line.endswith("\n") else ""
+            lines[i] = f"source: {archive_path}{newline}"
+            return "".join(lines)
+    return fm_block
+
+
 def rewrite_sources(
     *,
     wiki_dir: Path,
     state_path: Path,
     dry_run: bool = False,
     force: bool = False,
+    fix_frontmatter: bool = False,
 ) -> list[RewriteResult]:
     """Walk ``wiki_dir/*.md`` and backfill Archive bullets from ``state``.
 
@@ -205,6 +227,11 @@ def rewrite_sources(
             sourced.
         dry_run: If True, compute the outcomes but do not write any pages.
         force: If True, rewrite locked pages as well.
+        fix_frontmatter: If True, additionally rewrite the top-level
+            ``source:`` frontmatter key to point at the archive path when
+            ``state.sources[hash].archive_path`` is known (#45). Opt-in
+            because it breaks the default "byte-identical outside ## Sources"
+            invariant.
 
     Returns:
         One :class:`RewriteResult` per inspected page, in filesystem order.
@@ -224,7 +251,8 @@ def rewrite_sources(
         # Use python-frontmatter only to READ metadata — we never round-trip
         # it back through ``dumps``, because that reorders keys and reflows
         # YAML which would violate the "byte-diff outside ## Sources == 0"
-        # invariant. Frontmatter bytes are preserved verbatim.
+        # invariant. Frontmatter bytes are preserved verbatim (except for the
+        # opt-in --fix-frontmatter source-line rewrite below).
         post = frontmatter.loads(text)
         locked = bool(post.get("locked", False))
         if locked and not force:
@@ -236,11 +264,23 @@ def rewrite_sources(
         hashes = _page_hashes(state, page_path, wiki_dir, state_path, fm_hash_str)
 
         new_body = _rewrite_page_body(body, state, hashes)
-        if new_body == body:
+        new_fm_block = fm_block
+        if fix_frontmatter:
+            archived_records = [
+                state.sources[h]
+                for h in hashes
+                if h in state.sources and state.sources[h].archive_path
+            ]
+            if len(archived_records) == 1:
+                archive_path = archived_records[0].archive_path
+                assert archive_path is not None
+                new_fm_block = _fix_frontmatter_source_line(fm_block, archive_path)
+
+        if new_body == body and new_fm_block == fm_block:
             results.append(RewriteResult(page_path=page_path, outcome=RewriteOutcome.UNCHANGED))
             continue
 
-        payload = (fm_block + new_body).encode("utf-8")
+        payload = (new_fm_block + new_body).encode("utf-8")
         if not payload.endswith(b"\n"):
             payload += b"\n"
 

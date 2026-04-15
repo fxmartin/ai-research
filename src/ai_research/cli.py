@@ -508,13 +508,23 @@ def sources_rewrite(
         "--force",
         help="Rewrite locked pages as well (default: skip locked).",
     ),
+    fix_frontmatter: bool = typer.Option(  # noqa: B008
+        False,
+        "--fix-frontmatter",
+        help=(
+            "Also rewrite the top-level `source:` frontmatter key to point at "
+            "the archive path when state knows it (#45). Opt-in — breaks the "
+            "default 'byte-identical outside ## Sources' invariant."
+        ),
+    ),
 ) -> None:
     """Retroactively backfill ``- Archive:`` bullets into existing pages.
 
     For every ``wiki/*.md`` (top-level), look up each source's ``archive_path``
     in state.json and augment the ``## Sources`` section accordingly. Pages
     with nothing to backfill remain byte-identical. Locked pages are skipped
-    unless ``--force`` is passed.
+    unless ``--force`` is passed. Use ``--fix-frontmatter`` to also heal
+    stale ``source:`` frontmatter pointers left behind by archive-on-ingest.
     """
     try:
         results = rewrite_sources(
@@ -522,6 +532,7 @@ def sources_rewrite(
             state_path=state_file,
             dry_run=dry_run,
             force=force,
+            fix_frontmatter=fix_frontmatter,
         )
     except FileNotFoundError as exc:
         typer.echo(str(exc), err=True)
