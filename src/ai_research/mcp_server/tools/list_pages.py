@@ -49,6 +49,20 @@ TOOL = mcp_types.Tool(
                     "`wiki_dir` and the server context default."
                 ),
             },
+            "tag": {
+                "type": "string",
+                "description": (
+                    "Only return pages whose `tags` list contains this tag "
+                    "(exact, case-sensitive match)."
+                ),
+            },
+            "prefix": {
+                "type": "string",
+                "description": (
+                    "Only return pages whose `page` path starts with this "
+                    "prefix (e.g. `wiki/concepts/` or `wiki/dario-`)."
+                ),
+            },
         },
     },
 )
@@ -160,7 +174,17 @@ async def handle(arguments: dict[str, Any]) -> dict[str, Any]:
         raise FileNotFoundError(f"index.md not found: {index_path}")
 
     text = index_path.read_text(encoding="utf-8")
-    return {"pages": parse_index(text)}
+    pages = parse_index(text)
+
+    tag_filter = arguments.get("tag")
+    if isinstance(tag_filter, str) and tag_filter.strip():
+        pages = [p for p in pages if tag_filter in p.get("tags", [])]
+
+    prefix_filter = arguments.get("prefix")
+    if isinstance(prefix_filter, str) and prefix_filter.strip():
+        pages = [p for p in pages if str(p.get("page", "")).startswith(prefix_filter)]
+
+    return {"pages": pages}
 
 
 def register(registry: dict[str, Any]) -> None:

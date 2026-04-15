@@ -145,3 +145,46 @@ def test_handle_uses_server_context_by_default(tmp_path: Path) -> None:
         assert len(result["pages"]) == 3
     finally:
         ctx_module.clear_context()
+
+
+def test_tag_filter_returns_only_matching_pages(tmp_path: Path) -> None:
+    """`tag` argument filters to pages whose tags list contains it exactly."""
+    idx = tmp_path / "index.md"
+    idx.write_text(
+        "wiki/alpha.md · title: Alpha · tags: ai,ml · h1:  · links:0 · s\n"
+        "wiki/beta.md · title: Beta · tags: politics · h1:  · links:0 · s\n"
+        "wiki/gamma.md · title: Gamma · tags: ai,politics · h1:  · links:0 · s\n",
+        encoding="utf-8",
+    )
+    out = _run(list_pages_tool.handle({"index_path": str(idx), "tag": "ai"}))
+    paths = {p["page"] for p in out["pages"]}
+    assert paths == {"wiki/alpha.md", "wiki/gamma.md"}
+
+
+def test_prefix_filter_returns_only_matching_pages(tmp_path: Path) -> None:
+    """`prefix` argument filters pages whose page path starts with prefix."""
+    idx = tmp_path / "index.md"
+    idx.write_text(
+        "wiki/alpha.md · title: Alpha · tags:  · h1:  · links:0 · s\n"
+        "wiki/concepts/foo.md · title: Foo · tags:  · h1:  · links:0 · s\n"
+        "wiki/concepts/bar.md · title: Bar · tags:  · h1:  · links:0 · s\n",
+        encoding="utf-8",
+    )
+    out = _run(list_pages_tool.handle({"index_path": str(idx), "prefix": "wiki/concepts/"}))
+    paths = {p["page"] for p in out["pages"]}
+    assert paths == {"wiki/concepts/foo.md", "wiki/concepts/bar.md"}
+
+
+def test_tag_and_prefix_filters_compose(tmp_path: Path) -> None:
+    """Both filters applied together intersect."""
+    idx = tmp_path / "index.md"
+    idx.write_text(
+        "wiki/alpha.md · title: A · tags: ai · h1:  · links:0 · s\n"
+        "wiki/concepts/foo.md · title: Foo · tags: ai · h1:  · links:0 · s\n"
+        "wiki/concepts/bar.md · title: Bar · tags: politics · h1:  · links:0 · s\n",
+        encoding="utf-8",
+    )
+    out = _run(
+        list_pages_tool.handle({"index_path": str(idx), "tag": "ai", "prefix": "wiki/concepts/"})
+    )
+    assert [p["page"] for p in out["pages"]] == ["wiki/concepts/foo.md"]
