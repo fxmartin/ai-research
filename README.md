@@ -1,8 +1,10 @@
 # ai-research
 
+[![CI](https://github.com/fxmartin/ai-research/actions/workflows/ci.yml/badge.svg)](https://github.com/fxmartin/ai-research/actions/workflows/ci.yml)
+
 A local, Claude Code-native implementation of Karpathy's [LLM-Wiki pattern](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f): an LLM incrementally builds and maintains an interconnected, Obsidian-compatible markdown vault from your raw sources so knowledge compounds instead of being re-derived.
 
-> **Status:** pre-alpha. Foundation has landed (Story 01.1-001 done: `pyproject.toml`, Typer CLI skeleton, CI); Epic-01's remaining 8 stories are next. See [`docs/STORIES.md`](docs/STORIES.md) for progress.
+> **Status:** pre-alpha. See [`docs/STORIES.md`](docs/STORIES.md) for the full roadmap and progress tracker.
 
 ---
 
@@ -24,10 +26,8 @@ wiki/      Obsidian-compatible markdown (wikilinks + frontmatter)
 
 Two moving parts:
 
-1. **`ai-research` Python toolkit** — deterministic file operations only. Zero LLM calls. Verbs: `extract`, `materialize`, `index-rebuild`, `search`, `scan`.
-2. **Claude Code slash commands** in `.claude/commands/` — the product surface. `/ingest`, `/ingest-inbox`, `/ask`, `/status`. Claude Code is the LLM runtime. Slash commands compose the toolkit into user-visible capabilities.
-
-A later epic ([Epic-06](docs/stories/epic-06-mcp-server.md)) adds a read-only MCP server so Claude Desktop can query the same vault.
+1. **`ai-research` Python toolkit** — deterministic file operations only. Zero LLM calls.
+2. **Claude Code slash commands** in `.claude/commands/` — the product surface. Claude Code is the LLM runtime; slash commands compose the toolkit into user-visible capabilities.
 
 ## Prerequisites
 
@@ -41,10 +41,12 @@ A later epic ([Epic-06](docs/stories/epic-06-mcp-server.md)) adds a read-only MC
 
 ## Install
 
+Install the CLI globally as a `uv` tool:
+
 ```bash
 git clone git@github.com:fxmartin/ai-research.git
 cd ai-research
-uv tool install -e .
+uv tool install .
 ```
 
 Verify:
@@ -54,23 +56,27 @@ ai-research --help
 claude --version
 ```
 
+For development checkouts, use `uv tool install -e .` to install editable, or `uv sync` to manage an in-repo venv (see [Development](#development)).
+
 ## Quick start
 
+Basic usage flow: **ingest → materialize → query**.
+
 ```bash
-# Drop a paper into the inbox
+# 1. Drop a paper into the inbox
 cp ~/Downloads/some-paper.pdf raw/
 
-# Drain the inbox (interactive — opens Claude Code in this repo first)
-claude          # opens interactive session
+# 2. Ingest (interactive — /ingest-inbox runs extract → LLM draft → materialize)
+claude                   # opens interactive Claude Code session
 > /ingest-inbox
 
-# ...or headless, no session needed:
+# ...or headless:
 claude -p "/ingest-inbox"
 
-# Ask the vault
+# 3. Query the vault
 claude -p "/ask 'what does this paper say about sparse attention?'"
 
-# Ask with structured output for pipelines
+# 4. Structured output for pipelines
 claude -p "/ask 'summarize the key claim'" --output-format json | jq
 ```
 
@@ -78,86 +84,56 @@ Open `wiki/` in Obsidian to browse the graph.
 
 ## Invocation modes
 
-Everything works three ways:
+Everything works three equivalent ways:
 
 | Mode | When to use | Example |
 |------|-------------|---------|
 | **Interactive** | Exploring, iterating, asking follow-ups | Open `claude` and run `/ingest ./paper.pdf` |
-| **Self-paced watcher** | You're working, drop files periodically | `claude` → `/loop 20m /ingest-inbox` |
+| **Self-paced watcher** | Long session, drop files periodically | `claude` → `/loop 20m /ingest-inbox` |
 | **Headless / scheduled** | Cron, launchd, CI, shell pipelines | `claude -p "/ingest-inbox"` |
 
-## Commands
+## Slash commands
 
-### Slash commands (product surface)
+The product surface lives in `.claude/commands/`:
 
 | Command | Purpose |
 |---------|---------|
 | `/ingest <path-or-url>` | Ingest one source → wiki page with `[[wikilinks]]` + concept stubs |
-| `/ingest-inbox` | Drain `raw/` — ingest each file, move raw→sources, rebuild index |
-| `/ask "<question>"` | Q&A over the wiki with citations. JSON contract under `--output-format json` |
-| `/status` | Vault stats: pages, stubs, orphans, open contradictions (P1 — Epic-05) |
+| `/ingest-inbox` | Drain `raw/` — ingest every eligible file, move raw→sources, rebuild index. Loop-safe |
+| `/ask "<question>"` | Q&A over the wiki with citations. Returns `{answer, citations[], confidence}` JSON under `--output-format json` |
 
-### Python toolkit verbs (composed by slash commands; usable directly)
+## Python toolkit verbs
 
-| Verb | Purpose |
-|------|---------|
-| `ai-research extract <path-or-url>` | Extract text + metadata from PDF, URL, markdown, or YouTube (P1) |
-| `ai-research materialize --source <src> --from <draft.md>` | Atomically write a wiki page + move source into archive |
-| `ai-research index-rebuild` | Regenerate `.ai-research/index.md` retrieval index from `wiki/` |
-| `ai-research search "<query>"` | `rg` over `wiki/` with structured JSON hits |
-| `ai-research scan raw/` | List files eligible for ingest (skips too-fresh partials) |
-| `ai-research vault-lint` | Obsidian smoke test — wikilinks resolve, frontmatter parses |
-| `ai-research validate-citations` | Ensure `[[page-name]]` citations in an answer resolve to real pages |
+The `ai-research` CLI is a deterministic, LLM-free file-ops toolkit. Slash commands compose these; you can also call them directly.
 
-All toolkit verbs support `--json` for stdout, exit non-zero on failure, and perform zero LLM calls.
+| Verb | Purpose | Example |
+|------|---------|---------|
+| `extract` | Extract text + metadata from PDF, URL, or markdown | `ai-research extract ./paper.pdf --json` |
+| `archive` | Move an ingested source from `raw/` into the immutable `sources/<yyyy>/<mm>/` archive | `ai-research archive raw/paper.pdf` |
+| `materialize` | Atomically write a wiki page from a draft + archive its source | `ai-research materialize --source sources/2026/04/abc-paper.pdf --from draft.md` |
+| `index-rebuild` | Regenerate `.ai-research/index.md` retrieval surface from `wiki/` | `ai-research index-rebuild` |
+| `scan` | List files in `raw/` eligible for ingest (skips too-fresh partials) | `ai-research scan raw/ --json` |
+| `search` | `rg` over `wiki/` with structured JSON hits | `ai-research search "sparse attention" --json` |
+| `vault-lint` | Obsidian smoke test — all wikilinks resolve, frontmatter parses | `ai-research vault-lint` |
+| `ask-check` | Validate that `[[page-name]]` citations in an answer resolve to real pages | `ai-research ask-check answer.json` |
+
+All verbs support `--json` for stdout, exit non-zero on failure, and perform zero LLM calls.
 
 ## Retrieval mechanism (`/ask`)
 
 Two stages, no vector DB in v1:
 
-1. **Shortlist.** Claude Code reads `.ai-research/index.md` (one line per wiki page: title · tags · H1 headings · 1-line summary · outbound-link count), plus an optional `rg` lexical pre-filter for exact-term queries. Selects 3–8 candidate pages.
-2. **Answer.** Reads the shortlisted pages' full markdown. Emits answer with `[[page-name]]` citations (interactive) or JSON `{answer, citations[], confidence}` (headless).
+1. **Shortlist.** Claude Code reads `.ai-research/index.md` (one line per page: title · tags · H1 headings · 1-line summary · outbound-link count), plus an optional `ai-research search` lexical pre-filter for exact-term queries. Selects 3–8 candidates.
+2. **Answer.** Reads the shortlisted pages' full markdown. Emits answer with `[[page-name]]` citations (interactive) or `{answer, citations[], confidence}` JSON (headless). `ai-research ask-check` validates the citations post-hoc.
 
-Embeddings and graph-walk expansion (traverse `[[wikilinks]]` 1–2 hops) are [P2](docs/stories/epic-06-mcp-server.md).
-
-## Layout
-
-```
-ai-research/
-├── src/ai_research/              # Python toolkit (no LLM calls)
-│   ├── cli.py                    # Typer entry point
-│   ├── extract/                  # pdf, web, markdown, youtube (P1)
-│   ├── wiki/                     # page CRUD, frontmatter, atomic writes
-│   ├── index/                    # index.md rebuild
-│   ├── search/                   # rg wrapper
-│   ├── materialize/              # page write + raw→sources archival
-│   ├── state.py                  # state.json + source-hash registry
-│   ├── contracts.py              # Pydantic models for JSON contracts
-│   └── mcp_server/               # P1 — Epic-06
-├── .claude/commands/             # slash commands (product surface)
-├── raw/                          # INBOX (gitignored)
-├── sources/                      # immutable archive (gitignored)
-├── wiki/                         # Obsidian vault (gitignored scratch; treat as personal)
-├── .ai-research/
-│   ├── schema.toml               # wiki structure + page templates
-│   ├── state.json                # source hashes + page index
-│   └── index.md                  # retrieval surface for /ask
-├── docs/
-│   ├── STORIES.md                # epic navigation
-│   └── stories/                  # epic files + NFRs
-├── tests/
-├── REQUIREMENTS.md
-├── PROJECT-SEED.md
-├── CLAUDE.md
-└── pyproject.toml
-```
+Embeddings and graph-walk expansion are Phase-2.
 
 ## `/loop` compatibility smoke test
 
 `/ingest-inbox` is designed to be driven by Claude Code's `/loop` harness at a
-fixed interval, so you can leave a session open and have `raw/` drain itself.
-Use this manual checklist to validate the loop contract after a change to
-`.claude/commands/ingest-inbox.md` or any toolkit verb it composes.
+fixed interval, so a session can drain `raw/` itself. Use this manual
+checklist after any change to `.claude/commands/ingest-inbox.md` or a verb it
+composes.
 
 Invocation:
 
@@ -165,31 +141,23 @@ Invocation:
 /loop 20m /ingest-inbox
 ```
 
-Checklist (run in an interactive `claude` session inside the repo):
+Checklist (interactive `claude` session inside the repo):
 
-- [ ] **Empty-inbox tick is clean.** With `raw/` empty, wait for one tick. The
-      command reports `nothing to ingest` and does NOT mark the loop as failed.
-- [ ] **Drop-and-drain.** Copy one new PDF into `raw/`. Within 20 minutes the
-      file appears under `sources/<yyyy>/<mm>/…` and a page shows up in `wiki/`.
-- [ ] **Idempotent repeat.** On the next tick after a successful drain, the
-      command again reports `nothing to ingest` (no duplicate pages, no errors).
-      This confirms `--skip-known` is doing its job.
-- [ ] **Structured status on every tick.** Each tick's stdout contains the
-      `scanned:` / `ingested:` / `index:` summary block (or the single-line
-      `nothing to ingest` sentinel).
-- [ ] **Partial failure doesn't abort the loop.** Drop one good file and one
-      unsupported file into `raw/`. The good file ingests; the bad file is
-      reported under `failures:`; the loop keeps firing on the next tick.
+- [ ] **Empty-inbox tick is clean.** With `raw/` empty, one tick reports
+      `nothing to ingest` and does NOT mark the loop as failed.
+- [ ] **Drop-and-drain.** Copy a PDF into `raw/`. Within the interval, the
+      file appears under `sources/<yyyy>/<mm>/…` and a page in `wiki/`.
+- [ ] **Idempotent repeat.** Next tick reports `nothing to ingest` (no
+      duplicates — `--skip-known` is working).
+- [ ] **Structured status each tick.** Stdout contains the
+      `scanned:` / `ingested:` / `index:` block (or the `nothing to ingest`
+      sentinel).
+- [ ] **Partial failure doesn't abort the loop.** One good + one unsupported
+      file: good ingests, bad is listed under `failures:`, loop continues.
 
-If any step fails, re-run the contract tests
-(`uv run pytest tests/test_slash_commands.py::TestLoopCompat`) and inspect
+If any step fails, re-run
+`uv run pytest tests/test_slash_commands.py::TestLoopCompat` and inspect
 `.claude/commands/ingest-inbox.md` for drift.
-
-## Privacy
-
-- All state is local. The Python toolkit makes **no** outbound network calls except explicit `extract` fetches against user-provided URLs.
-- All LLM traffic is handled by Claude Code, which sends content to Anthropic. Your `wiki/` pages (and any source text Claude needs to draft or answer) are sent to Anthropic on demand.
-- No telemetry from this project. See `NFR-SEC-001` in [`docs/stories/non-functional-requirements.md`](docs/stories/non-functional-requirements.md).
 
 ## Development
 
@@ -199,10 +167,13 @@ uv run pytest              # unit + golden-file tests
 uv run pytest --cov        # run tests with coverage reporting (threshold: 80%)
 uv run pytest -m slow      # include the /ask JSON-contract harness (requires claude CLI)
 uv run ruff check .
+uv run ruff format --check .
 uv run pyright
 ```
 
-See [`CLAUDE.md`](CLAUDE.md) for the testing strategy, CI, and story-management protocol. See [`docs/STORIES.md`](docs/STORIES.md) to pick a story.
+All four gates (`ruff check`, `ruff format`, `pyright`, `pytest --cov`) run in GitHub Actions on every push and PR. See [![CI](https://github.com/fxmartin/ai-research/actions/workflows/ci.yml/badge.svg)](https://github.com/fxmartin/ai-research/actions/workflows/ci.yml) for live status.
+
+See [`CLAUDE.md`](CLAUDE.md) for the testing strategy and story-management protocol. See [`docs/STORIES.md`](docs/STORIES.md) for the roadmap and to pick a story.
 
 ## Troubleshooting
 
@@ -210,22 +181,27 @@ See [`CLAUDE.md`](CLAUDE.md) for the testing strategy, CI, and story-management 
 
 **`rg: command not found`** — `brew install ripgrep`.
 
-**`claude` CLI missing from launchd agent PATH** — launchd jobs don't inherit your shell's PATH. Set `PATH` explicitly in the plist `EnvironmentVariables`.
+**`claude` CLI missing from launchd PATH** — launchd jobs don't inherit your shell's PATH. Set `PATH` explicitly in the plist `EnvironmentVariables`.
 
-**`/ask` JSON isn't valid** — the `/ask` slash command asks Claude for a strict schema. If you see drift, update `.claude/commands/ask.md` to re-pin the schema and re-run the harness test (`tests/test_ask_contract.py`).
+**`/ask` JSON drift** — re-pin the schema in `.claude/commands/ask.md` and re-run `tests/test_ask_contract.py`.
 
-**Obsidian shows broken links** — run `ai-research vault-lint`. A broken wikilink usually means a page was renamed manually and `state.json` wasn't updated — regenerate it with `ai-research index-rebuild`.
+**Obsidian shows broken links** — run `ai-research vault-lint`, then `ai-research index-rebuild`.
 
-**`raw/` isn't draining** — check that Claude Code is actually running (interactive session open or a launchd agent firing `claude -p "/ingest-inbox"`). Files younger than 5 seconds are intentionally skipped; wait or adjust `--min-age-seconds`.
+**`raw/` isn't draining** — confirm Claude Code is running (interactive or via launchd/`claude -p`). Files younger than 5 seconds are skipped by design.
+
+## Privacy
+
+- All state is local. The Python toolkit makes **no** outbound network calls except explicit `extract` fetches against user-provided URLs.
+- All LLM traffic is handled by Claude Code, which sends content to Anthropic.
+- No telemetry from this project. See `NFR-SEC-001` in [`docs/stories/non-functional-requirements.md`](docs/stories/non-functional-requirements.md).
 
 ## Roadmap
 
-- **MVP** (Epics 01–04, 30 stories / 69 pts): PDF + URL + markdown ingest, cross-linking, `/ask`, Obsidian-clean vault, idempotent re-ingest, CI.
-- **Phase 2** (Epic-05, 6 stories / 17 pts): YouTube transcripts, contradiction detection, `/status`, launchd agent template.
-- **Epic-06** (8 stories / 19 pts): read-only MCP server for Claude Desktop.
-- **Backlog**: embeddings upgrade behind same `/ask` interface, FastAPI surface, OpenAI/Ollama provider fallback.
-
 Full detail in [`docs/STORIES.md`](docs/STORIES.md) and [`REQUIREMENTS.md`](REQUIREMENTS.md).
+
+- **MVP** (Epics 01–04): PDF + URL + markdown ingest, cross-linking, `/ask`, Obsidian-clean vault, idempotent re-ingest, CI.
+- **Phase 2** (Epic-05): YouTube transcripts, contradiction detection, `/status`, launchd agent template.
+- **Epic-06**: read-only MCP server for Claude Desktop.
 
 ## License
 
