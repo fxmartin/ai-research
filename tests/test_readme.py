@@ -95,9 +95,12 @@ def test_readme_mentions_pdftotext_prerequisite(readme_text: str) -> None:
 def test_readme_mentions_ripgrep_prerequisite(readme_text: str) -> None:
     """ripgrep must be listed as a prerequisite."""
     # Accept either the binary name or the package name
-    assert "ripgrep" in readme_text or "`rg`" in readme_text or "brew install ripgrep" in readme_text, (
-        "README must mention ripgrep as a prerequisite"
+    mentions_rg = (
+        "ripgrep" in readme_text
+        or "`rg`" in readme_text
+        or "brew install ripgrep" in readme_text
     )
+    assert mentions_rg, "README must mention ripgrep as a prerequisite"
 
 
 def test_readme_mentions_claude_cli_prerequisite(readme_text: str) -> None:
@@ -224,7 +227,9 @@ def test_readme_troubleshooting_covers_pdftotext(readme_text: str) -> None:
 
 def test_readme_troubleshooting_covers_ripgrep(readme_text: str) -> None:
     """Troubleshooting should document the rg / ripgrep missing error."""
-    has_rg_trouble = "rg" in readme_text and ("command not found" in readme_text or "brew install ripgrep" in readme_text)
+    has_rg_trouble = "rg" in readme_text and (
+        "command not found" in readme_text or "brew install ripgrep" in readme_text
+    )
     assert has_rg_trouble, (
         "README Troubleshooting must document the `rg: command not found` error "
         "and its fix (brew install ripgrep)"
