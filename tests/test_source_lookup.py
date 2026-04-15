@@ -104,9 +104,7 @@ def test_lookup_pre_migration_null_archive_path(tmp_path: Path) -> None:
     )
     state_file = _write_state(tmp_path, state)
 
-    result = runner.invoke(
-        app, ["source", "lookup", "old-page", "--state-file", str(state_file)]
-    )
+    result = runner.invoke(app, ["source", "lookup", "old-page", "--state-file", str(state_file)])
 
     assert result.exit_code == 0, result.output
     combined = (result.stdout or "") + (result.stderr or "")
@@ -140,9 +138,7 @@ def test_lookup_unknown_slug_exits_nonzero(tmp_path: Path) -> None:
     state = State()
     state_file = _write_state(tmp_path, state)
 
-    result = runner.invoke(
-        app, ["source", "lookup", "nope", "--state-file", str(state_file)]
-    )
+    result = runner.invoke(app, ["source", "lookup", "nope", "--state-file", str(state_file)])
 
     combined = (result.stdout or "") + (result.stderr or "")
     assert result.exit_code != 0

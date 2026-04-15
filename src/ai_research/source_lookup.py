@@ -94,11 +94,9 @@ def lookup_source_by_slug(
     stub_path = Path(wiki_dir) / "concepts" / f"{slug}.md"
     if stub_path.exists():
         raise StubOnlyError(
-            f"'{slug}' is a concept stub at {stub_path}; no archived source "
-            "bytes exist for stubs."
+            f"'{slug}' is a concept stub at {stub_path}; no archived source bytes exist for stubs."
         )
 
     raise UnknownSlugError(
-        f"no wiki page found for slug '{slug}' (searched state.pages and "
-        f"{wiki_dir}/concepts/)."
+        f"no wiki page found for slug '{slug}' (searched state.pages and {wiki_dir}/concepts/)."
     )
