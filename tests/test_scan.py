@@ -105,6 +105,21 @@ def test_scan_without_skip_known_keeps_hashed(raw_dir: Path) -> None:
     assert len(results) == 1
 
 
+def test_scan_ignores_dotfiles(raw_dir: Path) -> None:
+    # Regression: #30 — .gitkeep and other dotfiles are never real sources
+    # and must be filtered out before the mtime / skip-known checks.
+    (raw_dir / ".gitkeep").write_bytes(b"")
+    (raw_dir / ".DS_Store").write_bytes(b"junk")
+    real = raw_dir / "real.md"
+    real.write_bytes(b"content")
+    for p in raw_dir.iterdir():
+        _age_file(p, 60)
+
+    results = scan_raw(raw_dir)
+    names = {Path(p).name for p in results}
+    assert names == {"real.md"}
+
+
 def test_scan_ignores_directories(raw_dir: Path) -> None:
     (raw_dir / "subdir").mkdir()
     f = raw_dir / "file.md"

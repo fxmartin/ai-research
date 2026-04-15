@@ -87,7 +87,7 @@ def extract(
         typer.echo(str(exc), err=True)
         raise typer.Exit(code=1) from exc
 
-    json.dump(result, sys.stdout, ensure_ascii=False)
+    json.dump(result, sys.stdout, ensure_ascii=False, default=str)
     sys.stdout.write("\n")
 
 
