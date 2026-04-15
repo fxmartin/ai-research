@@ -12,6 +12,7 @@ from ai_research.wiki.stubs import (
     create_stub,
     create_stubs_for_body,
     extract_wikilinks,
+    retire_stub_if_exists,
 )
 
 FIXED_NOW = datetime(2026, 4, 14, 12, 0, 0, tzinfo=UTC)
@@ -271,3 +272,73 @@ def test_cli_stub_flag_is_idempotent(tmp_path: Path) -> None:
     res = runner.invoke(app, ["materialize", "--stub", "Topic", "--wiki-dir", str(wiki_dir)])
     assert res.exit_code == 0
     assert (wiki_dir / "concepts" / "topic.md").stat().st_mtime_ns == mtime_before
+
+
+# ---------------------------------------------------------------------------
+# retire_stub_if_exists (Issue #32)
+# ---------------------------------------------------------------------------
+
+
+def test_retire_stub_removes_true_stub(tmp_path: Path) -> None:
+    wiki = tmp_path / "wiki"
+    (wiki / "concepts").mkdir(parents=True)
+    stub = create_stub("Foo", wiki_dir=wiki, now=FIXED_NOW)
+    assert stub.exists()
+
+    removed = retire_stub_if_exists("foo", wiki_dir=wiki)
+    assert removed == stub
+    assert not stub.exists()
+
+
+def test_retire_stub_noop_when_missing(tmp_path: Path) -> None:
+    wiki = tmp_path / "wiki"
+    (wiki / "concepts").mkdir(parents=True)
+    assert retire_stub_if_exists("foo", wiki_dir=wiki) is None
+
+
+def test_retire_stub_preserves_human_authored_concept(tmp_path: Path) -> None:
+    wiki = tmp_path / "wiki"
+    (wiki / "concepts").mkdir(parents=True)
+    concept = wiki / "concepts" / "foo.md"
+    # Human-authored concept page — no stub: true.
+    concept.write_text(
+        "---\ntitle: Foo\ntype: concept\n---\n\nCurated content.\n",
+        encoding="utf-8",
+    )
+
+    removed = retire_stub_if_exists("foo", wiki_dir=wiki)
+    assert removed is None
+    assert concept.exists()
+    assert "Curated content" in concept.read_text(encoding="utf-8")
+
+
+def test_materialize_retires_stub_when_full_page_written(tmp_path: Path) -> None:
+    # End-to-end: create a stub, then materialize the full page for the same
+    # slug. The stub must be gone afterwards.
+    wiki = tmp_path / "wiki"
+    (wiki / "concepts").mkdir(parents=True)
+    sources = tmp_path / "sources"
+    sources.mkdir()
+    state_file = tmp_path / "state.json"
+
+    stub = create_stub("Dario Amodei", wiki_dir=wiki, now=FIXED_NOW)
+    assert stub.exists()
+
+    src = sources / "dario.md"
+    src.write_text("# src\n\nbody\n", encoding="utf-8")
+    draft_path = tmp_path / "draft.md"
+    draft_path.write_text(
+        "# Dario Amodei\n\n## Summary\n\nFull page body.\n",
+        encoding="utf-8",
+    )
+
+    result = materialize(
+        source=src,
+        draft_path=draft_path,
+        wiki_dir=wiki,
+        state_path=state_file,
+        now=FIXED_NOW,
+    )
+    assert result.page_path == wiki / "dario-amodei.md"
+    assert result.page_path.exists()
+    assert not stub.exists(), "stub should be retired after full page materialization"

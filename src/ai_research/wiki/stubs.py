@@ -29,7 +29,12 @@ import frontmatter
 from ai_research.archive import slugify
 from ai_research.state import atomic_write
 
-__all__ = ["create_stub", "create_stubs_for_body", "extract_wikilinks"]
+__all__ = [
+    "create_stub",
+    "create_stubs_for_body",
+    "extract_wikilinks",
+    "retire_stub_if_exists",
+]
 
 
 # ``[[Target]]``, ``[[Target|alias]]``, ``[[Target#Anchor]]``,
@@ -89,6 +94,35 @@ def create_stub(
     if not payload.endswith(b"\n"):
         payload += b"\n"
     atomic_write(stub_path, payload)
+    return stub_path
+
+
+def retire_stub_if_exists(slug: str, *, wiki_dir: Path) -> Path | None:
+    """Delete ``wiki/concepts/<slug>.md`` if it exists and is a stub.
+
+    Called by ``materialize`` right after writing a full page at
+    ``wiki/<slug>.md`` to reconcile the vault: any concept stub created by an
+    earlier ingest for the same slug should be retired so the Obsidian graph
+    has exactly one node per slug and ``index-rebuild`` doesn't list the stub
+    alongside the now-authoritative page (Issue #32).
+
+    A concept page is considered a retirable stub only when its frontmatter has
+    ``stub: true``. A human-authored concept page at ``wiki/concepts/<slug>.md``
+    (no ``stub: true`` marker) is preserved — we never clobber curated content.
+
+    Returns the removed stub path on retirement, ``None`` otherwise.
+    """
+    stub_path = Path(wiki_dir) / "concepts" / f"{slug}.md"
+    if not stub_path.exists():
+        return None
+    try:
+        post = frontmatter.load(stub_path)
+    except Exception:
+        # Malformed stub — leave it alone and let a human triage.
+        return None
+    if post.metadata.get("stub") is not True:
+        return None
+    stub_path.unlink()
     return stub_path
 
 
