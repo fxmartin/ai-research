@@ -1,7 +1,7 @@
 ---
 ingested_at: '2026-04-15T05:36:28.526633+00:00'
 locked: false
-source: /Users/fxmartin/dev/ai-research/wiki/raw/Components of A Coding Agent.md
+source: sources/2026/04/bed829db41af-components-of-a-coding-agent.md
 source_hash: bed829db41afcc5836d2d33b967ec23742c9807dd6cb5880f2f819fe12fa31aa
 title: Components of A Coding Agent
 ---

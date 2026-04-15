@@ -1,7 +1,7 @@
 ---
 ingested_at: '2026-04-15T05:13:11.137755+00:00'
 locked: false
-source: /Users/fxmartin/dev/ai-research/wiki/raw/Dario Amodei.md
+source: sources/2026/04/b02bb412e14c-dario-amodei.md
 source_hash: b02bb412e14cc90da7549c81170e8484b51c62131523ad0e31c05d270db4687b
 title: Dario Amodei
 ---

@@ -1,7 +1,7 @@
 ---
 ingested_at: '2026-04-15T05:09:20.378730+00:00'
 locked: false
-source: /Users/fxmartin/dev/ai-research/wiki/raw/Dario Amodei — The Adolescence of
+source: sources/2026/04/9fb8cad79a71-dario-amodei-the-adolescence-of-technology.md
   Technology.md
 source_hash: 9fb8cad79a7177c39c6fbbe82ac5bca6f7731497be25973031b4f8d628521bff
 title: Dario Amodei — The Adolescence of Technology

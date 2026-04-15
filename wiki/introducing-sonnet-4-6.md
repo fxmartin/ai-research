@@ -1,7 +1,7 @@
 ---
 ingested_at: '2026-04-15T05:28:08.746791+00:00'
 locked: false
-source: /Users/fxmartin/dev/ai-research/wiki/raw/Introducing Sonnet 4.6.md
+source: sources/2026/04/0af76ce9e49a-introducing-sonnet-4-6.md
 source_hash: 0af76ce9e49a8735975655f0ef47295828b0156e9d8d30e8176afbc50c9b7cc2
 title: Introducing Sonnet 4.6
 ---

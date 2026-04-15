@@ -1,7 +1,7 @@
 ---
 ingested_at: '2026-04-15T05:24:16.534619+00:00'
 locked: false
-source: /Users/fxmartin/dev/ai-research/wiki/raw/Claude Mythos Preview System Card
+source: sources/2026/04/2b1e0097352d-claude-mythos-preview-system-card-3.pdf
   (3).pdf
 source_hash: 2b1e0097352dc7cf21a564feab3c92dbf96f004b56329cc3976ceb8febe285cc
 title: Claude Mythos Preview System Card
@@ -37,3 +37,4 @@ The April 2026 system card for [[Claude Mythos Preview]], [[Anthropic]]'s most c
 - **Cited-by in this wiki**: [[Anthropic's Project Glasswing — restricting Claude Mythos to security researchers]] — Willison quotes the cyber-capability findings directly from this card.
 
 ## Sources
+- Archive: [claude-mythos-preview-system-card-3.pdf](sources/2026/04/2b1e0097352d-claude-mythos-preview-system-card-3.pdf)

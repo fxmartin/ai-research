@@ -1,7 +1,7 @@
 ---
 ingested_at: '2026-04-15T05:24:15.822180+00:00'
 locked: false
-source: /Users/fxmartin/dev/ai-research/wiki/raw/Anthropic’s Project Glasswing—restricting
+source: sources/2026/04/48b877f1aa1a-anthropics-project-glasswingrestricting-claude-mythos-to-security-researcherssou.md
   Claude Mythos to security researchers—sounds necessary to me.md
 source_hash: 48b877f1aa1a06fa60b0ec7159ceac5bb3d5de775863e5efb1136add8e65b933
 title: Anthropic's Project Glasswing — restricting Claude Mythos to security researchers

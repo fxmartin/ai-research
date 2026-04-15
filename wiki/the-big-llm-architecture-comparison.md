@@ -1,7 +1,7 @@
 ---
 ingested_at: '2026-04-15T05:51:36.344764+00:00'
 locked: false
-source: /Users/fxmartin/dev/ai-research/wiki/raw/The Big LLM Architecture Comparison.md
+source: sources/2026/04/944cdcddb530-the-big-llm-architecture-comparison.md
 source_hash: 944cdcddb5308ff370c2f05390882bd4afd5ed2e1201af2f9e56acf9f90727ce
 title: The Big LLM Architecture Comparison
 ---

@@ -1,7 +1,7 @@
 ---
 ingested_at: '2026-04-15T05:28:08.023713+00:00'
 locked: false
-source: /Users/fxmartin/dev/ai-research/wiki/raw/Claude Opus 4.6 System Card.pdf
+source: sources/2026/04/4db67c6b6aea-claude-opus-4-6-system-card.pdf
 source_hash: 4db67c6b6aea0a87e7f8a784b83fc05a0f1a61a3e87615fe7956e3486b951b3c
 title: Claude Opus 4.6 System Card
 ---

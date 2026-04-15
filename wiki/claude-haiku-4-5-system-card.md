@@ -1,7 +1,7 @@
 ---
 ingested_at: '2026-04-15T05:32:00.676333+00:00'
 locked: false
-source: /Users/fxmartin/dev/ai-research/wiki/raw/Claude Haiku 4.5 System Card.pdf
+source: sources/2026/04/1b9ae5f4f66a-claude-haiku-4-5-system-card.pdf
 source_hash: 1b9ae5f4f66a65c1b37a031179af3dba35959471a3a5d195e4fe700b87558141
 title: Claude Haiku 4.5 System Card
 ---

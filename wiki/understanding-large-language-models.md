@@ -1,7 +1,7 @@
 ---
 ingested_at: '2026-04-15T05:51:37.068006+00:00'
 locked: false
-source: /Users/fxmartin/dev/ai-research/wiki/raw/Understanding Large Language Models.md
+source: sources/2026/04/84139e725215-understanding-large-language-models.md
 source_hash: 84139e72521584a892b185cfa555445c1cd1d5a5bbb4dc448325aaf8713a52dc
 title: Understanding Large Language Models
 ---

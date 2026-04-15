@@ -1,7 +1,7 @@
 ---
 ingested_at: '2026-04-15T05:06:48.124050+00:00'
 locked: false
-source: /Users/fxmartin/dev/ai-research/wiki/raw/Something Big Is Happening.md
+source: sources/2026/04/6477da70d562-something-big-is-happening.md
 source_hash: 6477da70d562b739c5495c44272de34b9759089078f7d3b4fd6ee418107d3faa
 title: Something Big Is Happening
 ---

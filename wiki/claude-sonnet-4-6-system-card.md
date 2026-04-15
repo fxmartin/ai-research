@@ -1,7 +1,7 @@
 ---
 ingested_at: '2026-04-15T05:32:01.455631+00:00'
 locked: false
-source: /Users/fxmartin/dev/ai-research/wiki/raw/Claude Sonnet 4.6 System Card.pdf
+source: sources/2026/04/672339ab327e-claude-sonnet-4-6-system-card.pdf
 source_hash: 672339ab327e8798578b3559e8489561db5ad25e81b427de4e306393108e90b6
 title: Claude Sonnet 4.6 System Card
 ---

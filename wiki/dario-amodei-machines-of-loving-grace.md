@@ -1,7 +1,7 @@
 ---
 ingested_at: '2026-04-15T05:13:10.386716+00:00'
 locked: false
-source: /Users/fxmartin/dev/ai-research/wiki/raw/Dario Amodei — Machines of Loving
+source: sources/2026/04/fe2b9f7bd693-dario-amodei-machines-of-loving-grace.md
   Grace.md
 source_hash: fe2b9f7bd693d0239aa105e6c241c0569f67ddb55867e95384717928257a4de2
 title: Dario Amodei — Machines of Loving Grace
