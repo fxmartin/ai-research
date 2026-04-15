@@ -122,7 +122,7 @@
 **Technical Notes**: Parse `index.md` once per start, cache; invalidate when mtime changes.
 
 **Definition of Done**:
-- [ ] Tool + unit test with fixture index.
+- [x] Tool + unit test with fixture index.
 
 **Dependencies**: 02.2-001, 06.1-002
 **Risk Level**: Low
