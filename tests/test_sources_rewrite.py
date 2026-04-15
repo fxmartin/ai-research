@@ -52,10 +52,7 @@ def test_legacy_url_only_page_is_backfilled(tmp_path: Path) -> None:
     assert [r.outcome for r in results] == [RewriteOutcome.UPDATED]
     new_text = (wiki_dir / "legacy.md").read_text(encoding="utf-8")
     assert "- URL: https://example.com/foo" in new_text
-    assert (
-        "- Archive: [hash-legacy-foo.md]"
-        "(sources/2026/04/hash-legacy-foo.md)" in new_text
-    )
+    assert "- Archive: [hash-legacy-foo.md](sources/2026/04/hash-legacy-foo.md)" in new_text
     # Non-sources bytes preserved.
     assert "# Legacy Page" in new_text
     assert "Body text." in new_text
