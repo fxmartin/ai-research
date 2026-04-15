@@ -162,11 +162,15 @@ def render_sources_section(entries: list[SourceEntry]) -> str:
     return "\n".join(lines) + "\n"
 
 
-def _split_body(body: str) -> tuple[str, list[str]]:
-    """Split ``body`` into (text-above-Sources, existing-bullet-lines).
+def _split_body(body: str) -> tuple[str, list[str], str]:
+    """Split ``body`` into (text-above-Sources, bullet-lines, trailing).
 
-    If no ``## Sources`` heading exists, the second tuple element is an
-    empty list and the first is the entire body.
+    ``trailing`` is everything from the first non-bullet, non-blank line
+    (or the next H1/H2) after the ``## Sources`` bullets through EOF.
+    This guards against silent data loss when the drafter places
+    ``## Sources`` before other H2 sections (Issue #48).
+
+    If no ``## Sources`` heading exists, returns ``(body, [], "")``.
     """
     lines = body.splitlines()
     for idx, line in enumerate(lines):
@@ -174,15 +178,32 @@ def _split_body(body: str) -> tuple[str, list[str]]:
             above = "\n".join(lines[:idx])
             below = lines[idx + 1 :]
             bullets: list[str] = []
-            for raw in below:
+            end = 0
+            for j, raw in enumerate(below):
                 stripped = raw.strip()
                 if stripped.startswith("## ") or stripped.startswith("# "):
+                    end = j
                     break
                 if stripped == "":
+                    # Blank line after at least one bullet terminates the
+                    # bullets block; a leading blank right after ``## Sources``
+                    # (empty section) also terminates, leaving bullets empty.
+                    end = j
                     break
-                bullets.append(raw)
-            return above, bullets
-    return body, []
+                if stripped.startswith("-"):
+                    bullets.append(raw)
+                    end = j + 1
+                else:
+                    # Non-bullet, non-blank content — hand off to trailing.
+                    end = j
+                    break
+            else:
+                # Loop completed without break: all of ``below`` was consumed
+                # as bullets (or ``below`` was empty).
+                end = len(below)
+            trailing = "\n".join(below[end:]).lstrip("\n")
+            return above, bullets, trailing
+    return body, [], ""
 
 
 def _parse_bullets(bullet_lines: list[str]) -> list[SourceEntry]:
@@ -288,7 +309,7 @@ def merge_sources_section(body: str, new_entry: SourceEntry) -> str:
     re-materializing the same source (even after its single-bullet legacy
     record has been rewritten to the dual-bullet form) remain idempotent.
     """
-    above, bullet_lines = _split_body(body)
+    above, bullet_lines, trailing = _split_body(body)
 
     existing = _parse_bullets(bullet_lines)
 
@@ -306,5 +327,14 @@ def merge_sources_section(body: str, new_entry: SourceEntry) -> str:
 
     above_trimmed = above.rstrip("\n")
     if above_trimmed:
-        return f"{above_trimmed}\n\n{rebuilt_section}"
-    return rebuilt_section
+        result = f"{above_trimmed}\n\n{rebuilt_section}"
+    else:
+        result = rebuilt_section
+
+    # Re-attach any body content that followed the Sources section
+    # (Issue #48): Summary / Key Claims / Connections etc. must survive.
+    if trailing:
+        result = f"{result.rstrip()}\n\n{trailing}"
+        if not result.endswith("\n"):
+            result += "\n"
+    return result
