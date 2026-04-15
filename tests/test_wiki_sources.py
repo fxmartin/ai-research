@@ -112,7 +112,7 @@ def test_render_dual_bullet_url_and_archive() -> None:
     assert out == (
         "## Sources\n"
         "- URL: https://example.com/foo\n"
-        "- Archive: [sources/2026/04/abcdef-foo.pdf](sources/2026/04/abcdef-foo.pdf)\n"
+        "- Archive: [abcdef-foo.pdf](sources/2026/04/abcdef-foo.pdf)\n"
     )
 
 
@@ -126,8 +126,7 @@ def test_render_archive_only_no_url() -> None:
     )
     out = render_sources_section([entry])
     assert out == (
-        "## Sources\n"
-        "- Archive: [sources/2026/02/deadbeef-opus.pdf](sources/2026/02/deadbeef-opus.pdf)\n"
+        "## Sources\n- Archive: [deadbeef-opus.pdf](sources/2026/02/deadbeef-opus.pdf)\n"
     )
     assert "URL:" not in out
 
@@ -160,12 +159,7 @@ def test_parse_round_trip_dual_bullet() -> None:
     assert rendered == twice
     # Both bullets present exactly once.
     assert rendered.count("- URL: https://example.com/foo") == 1
-    assert (
-        rendered.count(
-            "- Archive: [sources/2026/04/abcdef-foo.pdf](sources/2026/04/abcdef-foo.pdf)"
-        )
-        == 1
-    )
+    assert rendered.count("- Archive: [abcdef-foo.pdf](sources/2026/04/abcdef-foo.pdf)") == 1
 
 
 def test_merge_two_dual_bullet_sources_preserves_both_pairs() -> None:
@@ -192,11 +186,11 @@ def test_merge_two_dual_bullet_sources_preserves_both_pairs() -> None:
     assert "- URL: https://example.com/first" in step2
     assert "- URL: https://example.com/second" in step2
     # Both Archive bullets.
-    assert "- Archive: [sources/2026/04/aaa-first.pdf](sources/2026/04/aaa-first.pdf)" in step2
-    assert "- Archive: [sources/2026/04/bbb-second.pdf](sources/2026/04/bbb-second.pdf)" in step2
+    assert "- Archive: [aaa-first.pdf](sources/2026/04/aaa-first.pdf)" in step2
+    assert "- Archive: [bbb-second.pdf](sources/2026/04/bbb-second.pdf)" in step2
     # Ordering: first URL/Archive pair precedes the second URL/Archive pair.
     first_url_idx = step2.index("- URL: https://example.com/first")
-    first_arch_idx = step2.index("sources/2026/04/aaa-first.pdf](")
+    first_arch_idx = step2.index("aaa-first.pdf](sources/2026/04/aaa-first.pdf)")
     second_url_idx = step2.index("- URL: https://example.com/second")
     assert first_url_idx < first_arch_idx < second_url_idx
 
@@ -234,7 +228,7 @@ def test_legacy_single_bullet_still_parses_on_merge() -> None:
     # key thing is it isn't dropped and isn't duplicated).
     assert "https://example.com/old" in out
     assert "- URL: https://example.com/new" in out
-    assert "- Archive: [sources/2026/04/new.pdf](sources/2026/04/new.pdf)" in out
+    assert "- Archive: [new.pdf](sources/2026/04/new.pdf)" in out
 
 
 def test_merge_sources_section_matches_by_path_not_title() -> None:
@@ -297,3 +291,66 @@ def test_merge_body_that_is_only_sources_heading() -> None:
 def test_source_entry_rejects_blank_title() -> None:
     with pytest.raises(ValueError):
         SourceEntry(title="", path="sources/x.pdf")
+
+
+# ---------------------------------------------------------------------------
+# Story 08.3-001 — Archive bullet uses human-readable filename as link label
+# ---------------------------------------------------------------------------
+
+
+def test_archive_label_strips_hash12_prefix() -> None:
+    """Hash-prefixed archive basename → label without the `<12-hex>-` prefix.
+
+    AC: ``sources/2026/04/abcdef123456-machines-of-loving-grace.md`` →
+    label ``machines-of-loving-grace.md``. The link target retains the full
+    hashed path.
+    """
+    archive = "sources/2026/04/abcdef123456-machines-of-loving-grace.md"
+    entry = SourceEntry(
+        title="Machines of Loving Grace",
+        path=archive,
+        archive_path=archive,
+    )
+    out = render_sources_section([entry])
+    assert f"- Archive: [machines-of-loving-grace.md]({archive})\n" in out
+
+
+def test_archive_label_pdf_keeps_extension() -> None:
+    """PDF basename keeps its `.pdf` extension in the visible label."""
+    archive = "sources/2026/02/deadbeef1234-opus-card.pdf"
+    entry = SourceEntry(
+        title="Opus Card",
+        path=archive,
+        archive_path=archive,
+    )
+    out = render_sources_section([entry])
+    assert f"- Archive: [opus-card.pdf]({archive})\n" in out
+
+
+def test_archive_label_without_hash_prefix_is_verbatim() -> None:
+    """Defensive: a basename without a 12-hex-prefix is used as-is.
+
+    Covers hand-authored or pre-hash-scheme paths. We must not accidentally
+    strip partial or shorter prefixes.
+    """
+    archive = "sources/2026/04/plain-name.pdf"
+    entry = SourceEntry(
+        title="Plain",
+        path=archive,
+        archive_path=archive,
+    )
+    out = render_sources_section([entry])
+    assert f"- Archive: [plain-name.pdf]({archive})\n" in out
+
+
+def test_archive_label_short_hexlike_prefix_not_stripped() -> None:
+    """Prefixes shorter than 12 hex chars are preserved (no false-positive strip)."""
+    archive = "sources/2026/04/abc-short.pdf"
+    entry = SourceEntry(
+        title="Short",
+        path=archive,
+        archive_path=archive,
+    )
+    out = render_sources_section([entry])
+    # The 3-char hex-like prefix must remain in the label.
+    assert f"- Archive: [abc-short.pdf]({archive})\n" in out

@@ -59,7 +59,7 @@ def test_created_with_url_emits_url_and_archive_bullets(tmp_path: Path) -> None:
     # Archive bullet includes the repo-root-relative POSIX path twice
     # (markdown-link label and target).
     hash12 = result.source_hash[:12]
-    expected = f"- Archive: [sources/2026/04/{hash12}-foo.md](sources/2026/04/{hash12}-foo.md)"
+    expected = f"- Archive: [foo.md](sources/2026/04/{hash12}-foo.md)"
     assert expected in body
 
 
@@ -83,9 +83,7 @@ def test_created_without_url_emits_archive_only(tmp_path: Path) -> None:
     assert "## Sources" in body
     assert "- URL:" not in body
     hash12 = result.source_hash[:12]
-    expected = (
-        f"- Archive: [sources/2026/04/{hash12}-paper.pdf](sources/2026/04/{hash12}-paper.pdf)"
-    )
+    expected = f"- Archive: [paper.pdf](sources/2026/04/{hash12}-paper.pdf)"
     assert expected in body
 
 
