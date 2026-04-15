@@ -36,7 +36,7 @@ from typing import TextIO
 
 import frontmatter
 
-from ai_research.archive import archive_source, slugify
+from ai_research.archive import archive_source, compute_archive_path, slugify
 from ai_research.state import SourceRecord, State, atomic_write, load_state, save_state
 from ai_research.wiki.index_rebuild import rebuild_index
 from ai_research.wiki.sources import SourceEntry, merge_sources_section
@@ -263,7 +263,25 @@ def materialize(  # noqa: PLR0913 — CLI-shaped keyword API, not hot path.
     # body and merge any prior sources from an existing page so re-materialization
     # with a new source appends rather than replacing.
     source_rel = _page_relative_source_path(source, wiki_dir)
-    entry = SourceEntry(title=title, path=source_rel, url=source_url)
+    # Pre-compute the archive path deterministically so the ## Sources bullet
+    # written here matches the file archive_source() will move bytes into
+    # afterwards. Skipped entirely when --no-archive is in effect so the
+    # entry renders URL-only (Story 08.1-002).
+    archive_rel_for_entry: str | None = None
+    if not no_archive and source.exists():
+        projected_archive = compute_archive_path(
+            source=source,
+            sources_root=resolved_sources_root,
+            title=title,
+            now=timestamp,
+        )
+        archive_rel_for_entry = _vault_relative_archive_path(projected_archive, wiki_dir)
+    entry = SourceEntry(
+        title=title,
+        path=source_rel,
+        url=source_url,
+        archive_path=archive_rel_for_entry,
+    )
     # Graft prior sources into draft before merging the new one.
     base_body = post.content
     existing_body = _read_existing_body(page_path)
@@ -389,6 +407,21 @@ def _page_relative_source_path(source: Path, wiki_dir: Path) -> str:
         return str(Path(source).resolve().relative_to(anchor))
     except ValueError:
         return str(Path(source).resolve())
+
+
+def _vault_relative_archive_path(archive_path: Path, wiki_dir: Path) -> str:
+    """Return archive_path as a POSIX path relative to the vault root.
+
+    Obsidian resolves markdown links relative to the vault root — here
+    ``wiki_dir``'s parent (e.g. the repo root in the default layout). When
+    the archive lives outside that anchor (unusual, test-only), we fall
+    back to the POSIX form of the absolute path.
+    """
+    try:
+        anchor = Path(wiki_dir).resolve().parent
+        return Path(archive_path).resolve().relative_to(anchor).as_posix()
+    except ValueError:
+        return Path(archive_path).resolve().as_posix()
 
 
 def _relative_or_absolute(page_path: Path, state_path: Path) -> str:
