@@ -11,10 +11,12 @@ dependencies = [
     "pydantic>=2.7.0",
     "tomli-w>=1.0.0",
     "trafilatura>=2.0.0",
+    "mcp>=1.27.0",
 ]
 
 [project.scripts]
 ai-research = "ai_research.cli:app"
+ai-research-mcp = "ai_research.mcp_server.server:main"
 
 [build-system]
 requires = ["hatchling"]
