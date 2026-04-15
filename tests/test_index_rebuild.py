@@ -33,6 +33,32 @@ def _sample_page(
     return f"---\ntitle: {title}\n{tag_line}summary: {summary}\n---\n{body}"
 
 
+def test_rebuild_index_excludes_wiki_raw_inbox(tmp_path: Path) -> None:
+    """Web Clipper inbox at wiki/raw/ must NOT be indexed (Issue #27).
+
+    Raw clippings are ephemeral ingest inputs living inside the vault for
+    Obsidian visibility. They must not appear in .ai-research/index.md or
+    compete for retrieval shortlisting alongside curated pages.
+    """
+    wiki = tmp_path / "wiki"
+    _write(wiki / "attention.md", _sample_page())
+    _write(
+        wiki / "raw" / "clip.md",
+        "---\ntitle: Raw Clipping\n---\n# Raw Clipping\n\ndo not index.\n",
+    )
+    index_path = tmp_path / ".ai-research" / "index.md"
+
+    entries = rebuild_index(wiki_dir=wiki, index_path=index_path)
+
+    rel_paths = {e.relative_path.as_posix() for e in entries}
+    assert "attention.md" in rel_paths
+    assert not any(p.startswith("raw/") for p in rel_paths), rel_paths
+
+    content = index_path.read_text(encoding="utf-8")
+    assert "raw/clip.md" not in content
+    assert "Raw Clipping" not in content
+
+
 def test_rebuild_index_creates_file(tmp_path: Path) -> None:
     wiki = tmp_path / "wiki"
     _write(wiki / "attention.md", _sample_page(tags=["ml", "nlp"]))

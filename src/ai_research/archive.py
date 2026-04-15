@@ -1,6 +1,6 @@
 """Source archival helper (Story 01.3-003).
 
-Moves an ingested file from a staging location (typically ``raw/``) into the
+Moves an ingested file from a staging location (typically ``wiki/raw/``) into the
 immutable ``sources/<yyyy>/<mm>/<hash>-<slug>.<ext>`` archive.
 
 The helper is intentionally the *single* archival implementation that slash
@@ -13,7 +13,7 @@ Design notes
 ------------
 - **Atomic move**: we use :func:`shutil.move`, which falls back to copy+unlink
   across filesystems but is a simple rename on the same volume (the expected
-  case when ``raw/`` and ``sources/`` share a disk).
+  case when ``wiki/raw/`` and ``sources/`` share a disk).
 - **Idempotency** is keyed on the SHA-256 of the source bytes and encoded into
   the target filename (first 12 hex chars). If the target exists and its bytes
   hash to the same value, the helper deletes the incoming source and returns

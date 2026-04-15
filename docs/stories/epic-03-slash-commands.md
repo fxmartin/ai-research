@@ -7,7 +7,7 @@
 **Success Metrics**:
 - `claude -p "/ingest ./paper.pdf"` produces a wiki page non-interactively.
 - `claude -p "/ask 'q'" --output-format json` emits a parseable `{answer, citations[], confidence}` object.
-- `/ingest-inbox` drains `raw/` identically interactive vs headless.
+- `/ingest-inbox` drains `wiki/raw/` identically interactive vs headless.
 
 ## Epic Scope
 **Total Stories**: 6 | **Total Points**: 17 | **MVP Stories**: 6
@@ -68,21 +68,21 @@
 #### Stories
 
 ##### Story 03.2-001: Author `.claude/commands/ingest-inbox.md`
-**User Story**: As FX, I want `/ingest-inbox` to scan `raw/`, call `/ingest` per eligible file, and summarize results, so I can drop sources and walk away.
+**User Story**: As FX, I want `/ingest-inbox` to scan `wiki/raw/`, call `/ingest` per eligible file, and summarize results, so I can drop sources and walk away.
 **Priority**: Must Have
 **Story Points**: 3
 
 **Acceptance Criteria**:
-- **Given** `raw/` contains 3 PDFs and 1 markdown **When** I run `/ingest-inbox` **Then** all 4 are ingested and `raw/` is empty.
+- **Given** `wiki/raw/` contains 3 PDFs and 1 markdown **When** I run `/ingest-inbox` **Then** all 4 are ingested and `wiki/raw/` is empty.
 - **Given** one file fails **When** the batch completes **Then** the failure is reported, successful files are still moved, and exit code is non-zero (headless mode).
 - **Given** a file with mtime < 5s **When** `/ingest-inbox` runs **Then** it is skipped and flagged for the next tick.
 - **Given** batch > 1 file **When** it finishes **Then** `index-rebuild` runs once (not per file).
 
-**Technical Notes**: Command shells out to `ai-research scan raw/ --json` then loops calling the Python verbs directly — NOT re-invoking `/ingest` per file (that would re-enter a slash command, which is expensive). The drafting step for each file still happens in the same Claude Code turn.
+**Technical Notes**: Command shells out to `ai-research scan wiki/raw/ --json` then loops calling the Python verbs directly — NOT re-invoking `/ingest` per file (that would re-enter a slash command, which is expensive). The drafting step for each file still happens in the same Claude Code turn.
 
 **Definition of Done**:
 - [x] `.claude/commands/ingest-inbox.md` committed.
-- [x] Headless smoke: `claude -p "/ingest-inbox"` against a fixture `raw/`.
+- [x] Headless smoke: `claude -p "/ingest-inbox"` against a fixture `wiki/raw/`.
 
 **Dependencies**: 03.1-001, 01.3-001
 **Risk Level**: Medium
@@ -90,13 +90,13 @@
 ---
 
 ##### Story 03.2-002: `/loop` compatibility smoke test
-**User Story**: As FX, I want to validate that `/loop` driving `/ingest-inbox` at 20-minute intervals drains `raw/` over time, so I can trust the solo workflow.
+**User Story**: As FX, I want to validate that `/loop` driving `/ingest-inbox` at 20-minute intervals drains `wiki/raw/` over time, so I can trust the solo workflow.
 **Priority**: Must Have
 **Story Points**: 1
 
 **Acceptance Criteria**:
-- **Given** an open Claude Code session with `/loop 20m /ingest-inbox` **When** I drop files into `raw/` **Then** they appear in `sources/` and `wiki/` within 20 minutes.
-- **Given** `raw/` is empty on a tick **When** `/loop` fires **Then** the command reports "nothing to ingest" and does not error.
+- **Given** an open Claude Code session with `/loop 20m /ingest-inbox` **When** I drop files into `wiki/raw/` **Then** they appear in `sources/` and `wiki/` within 20 minutes.
+- **Given** `wiki/raw/` is empty on a tick **When** `/loop` fires **Then** the command reports "nothing to ingest" and does not error.
 
 **Technical Notes**: Mostly documentation and a manual smoke-test checklist in the README.
 

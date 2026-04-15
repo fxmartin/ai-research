@@ -57,10 +57,10 @@ Jobs-to-be-done:
 **Directories on local disk:**
 
 ```
-raw/       # INBOX — drop new files here; watcher drains to sources/
 sources/   # immutable archive (PDF, URL snapshot, .md, transcript)
            #   layout: <yyyy>/<mm>/<hash>-<slug>.<ext>
 wiki/      # Obsidian-compatible markdown pages
+  raw/                 # INBOX — drop new files here; watcher drains to sources/ (Obsidian Web Clipper-compatible)
   concepts/            # stubs for cross-referenced concepts
   _contradictions.md   # Phase 2: index of flagged contradictions
 .ai-research/
@@ -69,13 +69,13 @@ wiki/      # Obsidian-compatible markdown pages
   index.md             # one-line-per-page retrieval index (LLM-maintained)
 .claude/
   commands/
-    ingest-inbox.md    # /ingest-inbox — drains raw/ into sources/ + wiki/
+    ingest-inbox.md    # /ingest-inbox — drains wiki/raw/ into sources/ + wiki/
     ingest.md          # /ingest <path-or-url> — single source
     ask.md             # /ask "<question>" — Q&A over wiki with citations
     status.md          # /status — vault stats (P1)
 ```
 
-**Ingestion flow.** User drops a file (or a `.url` text pointer) into `raw/`. The watcher invokes `/ingest-inbox` (interactively or headless via `claude -p`). For each file Claude Code: extracts text via the Python toolkit (`ai-research extract <path>`), drafts the wiki page (summary, key claims, `[[wikilinks]]`), and calls `ai-research materialize` to write the page atomically, update `state.json` + `index.md`, and move the raw file to `sources/<yyyy>/<mm>/<hash>-<slug>.<ext>`. `sources/` is append-only; `raw/` drains to empty between ticks.
+**Ingestion flow.** User drops a file (or a `.url` text pointer) into `wiki/raw/`. The watcher invokes `/ingest-inbox` (interactively or headless via `claude -p`). For each file Claude Code: extracts text via the Python toolkit (`ai-research extract <path>`), drafts the wiki page (summary, key claims, `[[wikilinks]]`), and calls `ai-research materialize` to write the page atomically, update `state.json` + `index.md`, and move the raw file to `sources/<yyyy>/<mm>/<hash>-<slug>.<ext>`. `sources/` is append-only; `wiki/raw/` drains to empty between ticks.
 
 **Ask flow.** `/ask "<question>"` runs inside Claude Code:
 1. Read cached `.ai-research/index.md` (one line per wiki page: title · tags · 1-line summary + H1 headings + outbound-link count). Optionally pre-filter with `ai-research search "<q>"` (rg wrapper) for exact-term queries.
@@ -86,13 +86,13 @@ wiki/      # Obsidian-compatible markdown pages
 **Orchestration options (all supported, no new code):**
 - **Interactive**: user runs `/ingest-inbox` or `/ask` in a Claude Code session.
 - **Self-paced**: `/loop` drives `/ingest-inbox` on a dynamic cadence during a session.
-- **Headless / scheduled**: `claude -p "/ingest-inbox"` in a launchd agent, cron, or shell pipeline — drains `raw/` with no user session. Same for `claude -p "/ask 'q'" --output-format json | jq`.
+- **Headless / scheduled**: `claude -p "/ingest-inbox"` in a launchd agent, cron, or shell pipeline — drains `wiki/raw/` with no user session. Same for `claude -p "/ask 'q'" --output-format json | jq`.
 
 **Core capabilities (v1):**
 1. `/ingest` — ingest one source → wiki page (LLM work in Claude Code; file ops in Python toolkit).
 2. Auto cross-linking — `[[wikilinks]]` emitted during page draft; unseen concepts create stubs via `ai-research materialize`.
 3. `/ask` — Q&A over the wiki with JSON-parseable citations.
-4. `/ingest-inbox` — drain `raw/` batch; works interactively, under `/loop`, or headless via `claude -p`.
+4. `/ingest-inbox` — drain `wiki/raw/` batch; works interactively, under `/loop`, or headless via `claude -p`.
 5. Contradiction detection (P1) — flags conflicting claims, appends to `wiki/_contradictions.md`.
 
 **Out of scope for v1:**
@@ -134,14 +134,14 @@ ai-research (Python package, uv)       │   (NO LLM calls — deterministic onl
 | P0-2 | `ai-research extract <path-or-url>` handles PDF (pdftotext), URL (trafilatura), and local markdown; emits `{text, metadata}` JSON to stdout. |
 | P0-3 | `ai-research materialize` takes a drafted page (stdin or `--from <file>`) + source path, atomically writes `wiki/<slug>.md` with YAML frontmatter (`title`, `source`, `ingested_at`, `source_hash`, `locked: false`), updates `state.json`, and moves raw file → `sources/<yyyy>/<mm>/<hash>-<slug>.<ext>`. |
 | P0-4 | `/ingest <path-or-url>` slash command: calls `extract` → Claude drafts page (summary, key claims, `[[wikilinks]]`, concept stubs) → calls `materialize`. |
-| P0-5 | `/ingest-inbox` slash command: scans `raw/`, invokes `/ingest` per file, prints a per-file result. Works interactively, under `/loop`, and headless via `claude -p "/ingest-inbox"`. |
+| P0-5 | `/ingest-inbox` slash command: scans `wiki/raw/`, invokes `/ingest` per file, prints a per-file result. Works interactively, under `/loop`, and headless via `claude -p "/ingest-inbox"`. |
 | P0-6 | `/ask "<question>"` slash command: reads `.ai-research/index.md`, shortlists pages, reads them, answers with `[[page-name]]` citations. Under `claude -p --output-format json` emits `{answer, citations[], confidence}`. |
 | P0-7 | `.ai-research/index.md` rebuilt on every `materialize` via `ai-research index-rebuild`; one line per page = title · tags · 1-line summary · H1 list · outbound-link count. |
 | P0-8 | Every wiki page contains: summary, key claims (bulleted), cross-references (`[[wikilinks]]`), and a `## Sources` section linking back to the archived file. |
 | P0-9 | Concept extraction emits `[[wikilinks]]`; unseen concepts produce stub pages in `wiki/concepts/` via `materialize --stub`. |
 | P0-10 | Idempotent re-ingest: `materialize` skips if `source_hash` unchanged; updates if changed; `locked: true` in frontmatter blocks overwrite. |
 | P0-11 | Vault opens cleanly in Obsidian: all wikilinks resolve OR point to stubs; frontmatter parses; graph view renders. |
-| P0-12 | `raw/` safety: skip files whose mtime is < 5s old (avoids partial reads); compute `source_hash` over fully-read bytes. |
+| P0-12 | `wiki/raw/` safety: skip files whose mtime is < 5s old (avoids partial reads); compute `source_hash` over fully-read bytes. |
 
 ### P1 — Should have (Phase 2, weeks 2–4)
 
@@ -166,7 +166,7 @@ ai-research (Python package, uv)       │   (NO LLM calls — deterministic onl
 - **Cost**: Claude Code manages usage accounting and prompt caching natively. Vault operations should exploit caching — `index.md` is a stable cache anchor; drafting uses cached system prompt.
 - **Portability**: vault is pure markdown — works with zero tooling if `ai-research` and/or Claude Code disappear. Python toolkit is pip-installable standalone.
 - **Privacy**: all state local. Only outbound traffic is Claude Code's own LLM calls. No telemetry from the Python toolkit.
-- **Reliability**: state mutations atomic (write-to-temp + rename). Python toolkit verbs are idempotent and side-effect-scoped to `raw/`, `sources/`, `wiki/`, `.ai-research/`. LLM retries handled by Claude Code.
+- **Reliability**: state mutations atomic (write-to-temp + rename). Python toolkit verbs are idempotent and side-effect-scoped to `wiki/raw/`, `sources/`, `wiki/`, `.ai-research/`. LLM retries handled by Claude Code.
 - **Scriptability**: every slash command must produce useful output under `claude -p --output-format json` so it can drive shell pipelines and scheduled jobs.
 
 ---
@@ -238,7 +238,7 @@ Repo is live. Add: `pyproject.toml` via `uv`, Typer skeleton, schema.toml loader
 | Q&A premise fails — retrieving wiki pages is worse than RAG over sources | High | Phase 1 includes a manual A/B check: same 10 questions answered (a) by wiki pages only, (b) by raw-source RAG. If (a) loses decisively, pivot to hybrid. |
 | Obsidian format drift (wikilink edge cases, callout syntax) | Low | Golden-file tests against a fixture vault; CI opens vault via obsidian-md-filter or equivalent linter. |
 | Solo project — motivation decay | Medium | Primary KPI is weekly use; if FX stops using it within a month, kill the project instead of over-investing. |
-| `raw/` drop + concurrent tick could double-process a partial file | Low | P0-12: skip files whose mtime < 5s; hash over fully-read bytes; idempotent `materialize` (P0-10) neutralizes rare duplicates. |
+| `wiki/raw/` drop + concurrent tick could double-process a partial file | Low | P0-12: skip files whose mtime < 5s; hash over fully-read bytes; idempotent `materialize` (P0-10) neutralizes rare duplicates. |
 | Vendor lock-in to Claude Code (no SDK fallback) | Medium | Accepted v1 trade — Python toolkit is provider-agnostic, so P2 SDK layer can be added without touching file ops. Slash commands are the only Claude-Code-specific surface. |
 | Slash commands are prose → behavior drift across Claude model updates | Medium | JSON output contract for `/ask` pinned in P0-6; golden-file tests exercise the Python toolkit (deterministic half) on every commit; weekly manual smoke test of `/ask` quality. |
 | `index.md` summaries are LLM-generated → a bad summary makes a page invisible to `/ask` Stage 1 | Medium | Include page H1s + tags verbatim in each index line (not just an LLM-written summary); `/ask` falls back to `ai-research search` (rg) when confidence < threshold. |
