@@ -1,22 +1,44 @@
-"""Page ``## Sources`` back-reference section (Story 02.2-003).
+"""Page ``## Sources`` back-reference section.
 
-Every materialized wiki page ends with a ``## Sources`` section linking each
-contributing archived source. The merge is idempotent: re-materializing the
-same source is a no-op; re-materializing with a *different* source appends
-without dropping prior entries.
+Stories 02.2-003 (initial single-bullet form) and 08.1-001 (dual-bullet
+URL + Archive form). Every materialized wiki page ends with a ``## Sources``
+section linking each contributing source. The merge is idempotent:
+re-materializing the same source is a no-op; re-materializing with a
+*different* source appends without dropping prior entries.
+
+Rendering shape (08.1-001)
+--------------------------
+For a source with both a URL and an archived local path::
+
+    ## Sources
+    - URL: https://example.com/foo
+    - Archive: [sources/2026/04/abcdef-foo.pdf](sources/2026/04/abcdef-foo.pdf)
+
+PDF source (no URL) with an archive path::
+
+    - Archive: [sources/2026/04/ab12-att.pdf](sources/2026/04/ab12-att.pdf)
+
+Pre-Epic-07 record (``archive_path=None``) carrying only a URL::
+
+    - URL: https://example.com/foo
+
+Fully legacy entries (no URL, no archive_path — only the deprecated
+``path`` field) still render in the original ``- [title](path)`` form so
+pages materialized before Epic-07 round-trip cleanly.
 
 Design notes
 ------------
 - We treat the body as plain text and locate ``## Sources`` heading by line.
-  Anything before the heading is preserved verbatim. The list items below the
-  heading are parsed minimally (``- [title](path)`` pattern) so we can dedupe
-  by **archive path**, the only stable identifier.
-- URL sources carry both the archived snapshot path AND the original URL, per
-  AC3. The URL is rendered as a parenthetical suffix on the same list line so
-  the section remains a flat bullet list (Obsidian renders cleanly).
-- The merge is *additive only* — we never drop or rewrite an existing entry.
-  The matching wiki page is the source of truth; this module's job is to
-  guarantee one bullet per archive path, in insertion order.
+  Anything before the heading is preserved verbatim. The list items below
+  the heading are parsed in two passes: first the new dual-bullet
+  ``- URL: ...`` / ``- Archive: [text](path)`` shape, then the legacy
+  single-bullet ``- [title](path) (url)`` shape. This keeps pages written
+  by earlier versions round-trippable.
+- Each source is uniquely identified by a **dedupe key** — the archive
+  path if present, else the URL, else the deprecated ``path``. Re-
+  materializing a source with the same key replaces nothing and duplicates
+  nothing; re-materializing with a *new* key appends.
+- The merge is *additive only* — we never drop an existing entry.
 """
 
 from __future__ import annotations
@@ -34,26 +56,36 @@ __all__ = [
 
 SOURCES_HEADING = "## Sources"
 
-# Captures "- [title](path)" with an optional " (url)" suffix. We anchor on the
-# leading dash so other Markdown content under ## Sources is left untouched.
-_ENTRY_RE = re.compile(
+# New dual-bullet shapes (08.1-001).
+_URL_BULLET_RE = re.compile(r"^-\s*URL:\s*(?P<url>\S.*?)\s*$")
+_ARCHIVE_BULLET_RE = re.compile(r"^-\s*Archive:\s*\[(?P<label>[^\]]+)\]\((?P<path>[^)]+)\)\s*$")
+
+# Legacy single-bullet shape: "- [title](path)" with optional " (url)" suffix.
+_LEGACY_ENTRY_RE = re.compile(
     r"^-\s*\[(?P<title>[^\]]+)\]\((?P<path>[^)]+)\)(?:\s*\((?P<url>https?://[^)]+)\))?\s*$"
 )
 
 
 @dataclass(frozen=True)
 class SourceEntry:
-    """One archived source contributing to a wiki page.
+    """One source contributing to a wiki page.
 
     Attributes:
-        title: Human-readable label for the link text.
-        path: Repository-relative archive path (e.g. ``sources/2026/04/ab-x.pdf``).
+        title: Human-readable label for the link text (legacy fallback).
+        path: Repository-relative archive path used by the pre-08 single-
+            bullet form. Kept for backwards compatibility with pages
+            written before Epic-08 and for the fully-legacy fallback
+            (no ``url``, no ``archive_path``).
         url: Optional original URL when the source was a web fetch.
+        archive_path: Optional repository-relative path to the immutable
+            archived copy (e.g. ``sources/2026/04/ab-x.pdf``). When set,
+            drives the ``- Archive:`` bullet in the new dual-bullet form.
     """
 
     title: str
     path: str
     url: str | None = None
+    archive_path: str | None = None
 
     def __post_init__(self) -> None:
         if not self.title or not self.title.strip():
@@ -61,20 +93,47 @@ class SourceEntry:
         if not self.path or not self.path.strip():
             raise ValueError("SourceEntry.path must be non-empty")
 
-    def render(self) -> str:
-        """Render this entry as a single Markdown bullet line (no trailing \\n)."""
-        line = f"- [{self.title}]({self.path})"
+    @property
+    def _dedupe_key(self) -> str:
+        """Stable identity for merge dedupe.
+
+        The archive path wins when present (post-Epic-07 sources); the URL
+        is next (URL-only legacy records); finally the bare path (fully
+        legacy PDF-only records).
+        """
+        if self.archive_path:
+            return f"archive:{self.archive_path}"
         if self.url:
-            line += f" ({self.url})"
-        return line
+            return f"url:{self.url}"
+        return f"path:{self.path}"
+
+    def render(self) -> str:
+        """Render this entry as one-or-two Markdown bullets (no trailing \\n).
+
+        Shape selection:
+          - ``archive_path`` set and ``url`` set → two bullets (URL + Archive).
+          - ``archive_path`` set, no ``url`` → Archive bullet only.
+          - ``url`` set, ``archive_path`` is None → URL bullet only.
+          - Neither → legacy ``- [title](path)`` single bullet.
+        """
+        bullets: list[str] = []
+        if self.url:
+            bullets.append(f"- URL: {self.url}")
+        if self.archive_path:
+            bullets.append(f"- Archive: [{self.archive_path}]({self.archive_path})")
+        if not bullets:
+            # Fully legacy fallback — no URL, no archive_path. Keep the
+            # historical single-bullet rendering so pre-Epic-08 pages with
+            # only the deprecated ``path`` field continue to round-trip.
+            bullets.append(f"- [{self.title}]({self.path})")
+        return "\n".join(bullets)
 
 
 def render_sources_section(entries: list[SourceEntry]) -> str:
     """Render a fresh ``## Sources`` section from ``entries``.
 
-    Returns the heading plus one bullet per entry, terminated by ``\\n``.
-    Used by callers that want the section text without an existing body to
-    merge into (e.g. tests and golden-file fixtures).
+    Returns the heading plus one or two bullets per entry (see
+    :meth:`SourceEntry.render`), terminated by ``\\n``.
     """
     lines = [SOURCES_HEADING]
     lines.extend(entry.render() for entry in entries)
@@ -84,66 +143,140 @@ def render_sources_section(entries: list[SourceEntry]) -> str:
 def _split_body(body: str) -> tuple[str, list[str]]:
     """Split ``body`` into (text-above-Sources, existing-bullet-lines).
 
-    If no ``## Sources`` heading exists, the second tuple element is an empty
-    list and the first is the entire body.
+    If no ``## Sources`` heading exists, the second tuple element is an
+    empty list and the first is the entire body.
     """
     lines = body.splitlines()
     for idx, line in enumerate(lines):
         if line.strip() == SOURCES_HEADING:
             above = "\n".join(lines[:idx])
             below = lines[idx + 1 :]
-            # Bullet lines under the section, until a blank-line gap or new heading.
             bullets: list[str] = []
             for raw in below:
                 stripped = raw.strip()
                 if stripped.startswith("## ") or stripped.startswith("# "):
                     break
                 if stripped == "":
-                    # Allow blank lines inside the section but stop collecting
-                    # bullets once we hit one (keep parser conservative).
                     break
                 bullets.append(raw)
             return above, bullets
     return body, []
 
 
+def _parse_bullets(bullet_lines: list[str]) -> list[SourceEntry]:
+    """Parse a sequence of bullet lines into SourceEntry objects.
+
+    Walks the lines sequentially, pairing adjacent ``- URL:`` and
+    ``- Archive:`` bullets into a single :class:`SourceEntry`. A standalone
+    URL or Archive bullet becomes a one-sided entry. Unrecognized lines
+    fall through to the legacy single-bullet parser and, failing that,
+    are silently dropped (existing 02.2-003 behavior).
+    """
+    entries: list[SourceEntry] = []
+    i = 0
+    n = len(bullet_lines)
+    while i < n:
+        line = bullet_lines[i].strip()
+
+        url_match = _URL_BULLET_RE.match(line)
+        if url_match:
+            url = url_match.group("url")
+            archive_path: str | None = None
+            label: str | None = None
+            # Pair with immediately-following Archive bullet, if any.
+            if i + 1 < n:
+                next_line = bullet_lines[i + 1].strip()
+                arch_match = _ARCHIVE_BULLET_RE.match(next_line)
+                if arch_match:
+                    archive_path = arch_match.group("path")
+                    label = arch_match.group("label")
+                    i += 1
+            title = label or url
+            path = archive_path or url
+            entries.append(
+                SourceEntry(
+                    title=title,
+                    path=path,
+                    url=url,
+                    archive_path=archive_path,
+                )
+            )
+            i += 1
+            continue
+
+        arch_match = _ARCHIVE_BULLET_RE.match(line)
+        if arch_match:
+            # Named groups are non-optional here because the regex requires
+            # both to match; coerce to str to satisfy the type checker.
+            archive_path = str(arch_match.group("path"))
+            label = str(arch_match.group("label"))
+            entries.append(
+                SourceEntry(
+                    title=label,
+                    path=archive_path,
+                    url=None,
+                    archive_path=archive_path,
+                )
+            )
+            i += 1
+            continue
+
+        legacy_match = _LEGACY_ENTRY_RE.match(line)
+        if legacy_match:
+            entries.append(
+                SourceEntry(
+                    title=legacy_match.group("title"),
+                    path=legacy_match.group("path"),
+                    url=legacy_match.group("url"),
+                    archive_path=None,
+                )
+            )
+            i += 1
+            continue
+
+        # Unparsable — skip, matching prior 02.2-003 tolerance.
+        i += 1
+    return entries
+
+
 def _parse_entry(line: str) -> SourceEntry | None:
-    """Parse a bullet line into a SourceEntry; return None if it doesn't match."""
-    m = _ENTRY_RE.match(line.strip())
-    if not m:
-        return None
-    return SourceEntry(
-        title=m.group("title"),
-        path=m.group("path"),
-        url=m.group("url"),
-    )
+    """Parse a single bullet line into a SourceEntry.
+
+    Used by callers that still want a one-line parse (e.g. materialize's
+    prior-source grafting). Returns ``None`` if the line doesn't match any
+    known shape. For the dual-bullet form, this returns a one-sided entry
+    (only URL, or only Archive) because there is no adjacent line
+    context — full pairing happens in :func:`_parse_bullets`.
+    """
+    entries = _parse_bullets([line])
+    return entries[0] if entries else None
 
 
 def merge_sources_section(body: str, new_entry: SourceEntry) -> str:
     """Return ``body`` with ``new_entry`` merged into a ``## Sources`` section.
 
     Behavior:
-    - No existing section: append ``\\n## Sources\\n- [...](...)\\n`` at the end.
-    - Existing section, ``new_entry.path`` already present: no-op (idempotent).
-    - Existing section, new path: append a new bullet, preserving prior entries
-      in their original order.
+    - No existing section: append ``\\n## Sources\\n<bullets>\\n`` at the end.
+    - Existing section, same dedupe key already present: no-op (idempotent).
+    - Existing section, new key: append a new entry, preserving prior
+      entries in their original order.
+
+    Dedupe is keyed on :attr:`SourceEntry._dedupe_key` — archive path wins,
+    URL is the fallback, raw path is the last resort. This lets
+    re-materializing the same source (even after its single-bullet legacy
+    record has been rewritten to the dual-bullet form) remain idempotent.
     """
     above, bullet_lines = _split_body(body)
 
-    existing: list[SourceEntry] = []
-    for line in bullet_lines:
-        parsed = _parse_entry(line)
-        if parsed is not None:
-            existing.append(parsed)
+    existing = _parse_bullets(bullet_lines)
 
-    paths_seen = {e.path for e in existing}
-    if new_entry.path not in paths_seen:
+    keys_seen = {e._dedupe_key for e in existing}
+    if new_entry._dedupe_key not in keys_seen:
         existing.append(new_entry)
 
     rebuilt_section = render_sources_section(existing)
 
     if not bullet_lines and SOURCES_HEADING not in body:
-        # Fresh append: ensure a blank-line gap between body and section.
         prefix = above.rstrip("\n")
         if prefix:
             return f"{prefix}\n\n{rebuilt_section}"
