@@ -41,18 +41,57 @@
     ]
   },
   "sources": {
-    "0af76ce9e49a8735975655f0ef47295828b0156e9d8d30e8176afbc50c9b7cc2": "wiki/introducing-sonnet-4-6.md",
-    "1b9ae5f4f66a65c1b37a031179af3dba35959471a3a5d195e4fe700b87558141": "wiki/claude-haiku-4-5-system-card.md",
-    "2b1e0097352dc7cf21a564feab3c92dbf96f004b56329cc3976ceb8febe285cc": "wiki/claude-mythos-preview-system-card.md",
-    "48b877f1aa1a06fa60b0ec7159ceac5bb3d5de775863e5efb1136add8e65b933": "wiki/anthropic-s-project-glasswing-restricting-claude-mythos-to-security-researchers.md",
-    "4db67c6b6aea0a87e7f8a784b83fc05a0f1a61a3e87615fe7956e3486b951b3c": "wiki/claude-opus-4-6-system-card.md",
-    "6477da70d562b739c5495c44272de34b9759089078f7d3b4fd6ee418107d3faa": "wiki/something-big-is-happening.md",
-    "672339ab327e8798578b3559e8489561db5ad25e81b427de4e306393108e90b6": "wiki/claude-sonnet-4-6-system-card.md",
-    "84139e72521584a892b185cfa555445c1cd1d5a5bbb4dc448325aaf8713a52dc": "wiki/understanding-large-language-models.md",
-    "944cdcddb5308ff370c2f05390882bd4afd5ed2e1201af2f9e56acf9f90727ce": "wiki/the-big-llm-architecture-comparison.md",
-    "9fb8cad79a7177c39c6fbbe82ac5bca6f7731497be25973031b4f8d628521bff": "wiki/dario-amodei-the-adolescence-of-technology.md",
-    "b02bb412e14cc90da7549c81170e8484b51c62131523ad0e31c05d270db4687b": "wiki/dario-amodei.md",
-    "bed829db41afcc5836d2d33b967ec23742c9807dd6cb5880f2f819fe12fa31aa": "wiki/components-of-a-coding-agent.md",
-    "fe2b9f7bd693d0239aa105e6c241c0569f67ddb55867e95384717928257a4de2": "wiki/dario-amodei-machines-of-loving-grace.md"
+    "0af76ce9e49a8735975655f0ef47295828b0156e9d8d30e8176afbc50c9b7cc2": {
+      "archive_path": "sources/2026/04/0af76ce9e49a-introducing-sonnet-4-6.md",
+      "page": "wiki/introducing-sonnet-4-6.md"
+    },
+    "1b9ae5f4f66a65c1b37a031179af3dba35959471a3a5d195e4fe700b87558141": {
+      "archive_path": "sources/2026/04/1b9ae5f4f66a-claude-haiku-4-5-system-card.pdf",
+      "page": "wiki/claude-haiku-4-5-system-card.md"
+    },
+    "2b1e0097352dc7cf21a564feab3c92dbf96f004b56329cc3976ceb8febe285cc": {
+      "archive_path": "sources/2026/04/2b1e0097352d-claude-mythos-preview-system-card-3.pdf",
+      "page": "wiki/claude-mythos-preview-system-card.md"
+    },
+    "48b877f1aa1a06fa60b0ec7159ceac5bb3d5de775863e5efb1136add8e65b933": {
+      "archive_path": "sources/2026/04/48b877f1aa1a-anthropics-project-glasswingrestricting-claude-mythos-to-security-researcherssou.md",
+      "page": "wiki/anthropic-s-project-glasswing-restricting-claude-mythos-to-security-researchers.md"
+    },
+    "4db67c6b6aea0a87e7f8a784b83fc05a0f1a61a3e87615fe7956e3486b951b3c": {
+      "archive_path": "sources/2026/04/4db67c6b6aea-claude-opus-4-6-system-card.pdf",
+      "page": "wiki/claude-opus-4-6-system-card.md"
+    },
+    "6477da70d562b739c5495c44272de34b9759089078f7d3b4fd6ee418107d3faa": {
+      "archive_path": "sources/2026/04/6477da70d562-something-big-is-happening.md",
+      "page": "wiki/something-big-is-happening.md"
+    },
+    "672339ab327e8798578b3559e8489561db5ad25e81b427de4e306393108e90b6": {
+      "archive_path": "sources/2026/04/672339ab327e-claude-sonnet-4-6-system-card.pdf",
+      "page": "wiki/claude-sonnet-4-6-system-card.md"
+    },
+    "84139e72521584a892b185cfa555445c1cd1d5a5bbb4dc448325aaf8713a52dc": {
+      "archive_path": "sources/2026/04/84139e725215-understanding-large-language-models.md",
+      "page": "wiki/understanding-large-language-models.md"
+    },
+    "944cdcddb5308ff370c2f05390882bd4afd5ed2e1201af2f9e56acf9f90727ce": {
+      "archive_path": "sources/2026/04/944cdcddb530-the-big-llm-architecture-comparison.md",
+      "page": "wiki/the-big-llm-architecture-comparison.md"
+    },
+    "9fb8cad79a7177c39c6fbbe82ac5bca6f7731497be25973031b4f8d628521bff": {
+      "archive_path": "sources/2026/04/9fb8cad79a71-dario-amodei-the-adolescence-of-technology.md",
+      "page": "wiki/dario-amodei-the-adolescence-of-technology.md"
+    },
+    "b02bb412e14cc90da7549c81170e8484b51c62131523ad0e31c05d270db4687b": {
+      "archive_path": "sources/2026/04/b02bb412e14c-dario-amodei.md",
+      "page": "wiki/dario-amodei.md"
+    },
+    "bed829db41afcc5836d2d33b967ec23742c9807dd6cb5880f2f819fe12fa31aa": {
+      "archive_path": "sources/2026/04/bed829db41af-components-of-a-coding-agent.md",
+      "page": "wiki/components-of-a-coding-agent.md"
+    },
+    "fe2b9f7bd693d0239aa105e6c241c0569f67ddb55867e95384717928257a4de2": {
+      "archive_path": "sources/2026/04/fe2b9f7bd693-dario-amodei-machines-of-loving-grace.md",
+      "page": "wiki/dario-amodei-machines-of-loving-grace.md"
+    }
   }
 }

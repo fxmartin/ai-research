@@ -34,4 +34,4 @@ The February 2026 system card for [[Opus 4.6]], [[Anthropic]]'s frontier model a
 - **In this wiki**: [[Something Big Is Happening]] cites the 2026-02-05 simultaneous release of Opus 4.6 and GPT-5.3 Codex as the inflection point; [[Anthropic's Project Glasswing — restricting Claude Mythos to security researchers]] uses Opus 4.6 as the "generally releasable" baseline Mythos exceeds.
 
 ## Sources
-- [Claude Opus 4.6 System Card](wiki/raw/Claude Opus 4.6 System Card.pdf)
+- Archive: [claude-opus-4-6-system-card.pdf](sources/2026/04/4db67c6b6aea-claude-opus-4-6-system-card.pdf)

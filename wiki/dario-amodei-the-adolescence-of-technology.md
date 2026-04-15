@@ -34,4 +34,5 @@ A long-form essay by [[Dario Amodei]] ([[Anthropic]] CEO) framing humanity's cur
 - **Cross-references in this wiki**: [[Something Big Is Happening]] cites the same thought experiment (a "country" of 50M digital workers by 2027) that appears here as Amodei's framing for the adolescence argument.
 
 ## Sources
-- [Dario Amodei — The Adolescence of Technology](wiki/raw/Dario Amodei — The Adolescence of Technology.md) (https://www.darioamodei.com/essay/the-adolescence-of-technology)
+- URL: https://www.darioamodei.com/essay/the-adolescence-of-technology
+- Archive: [dario-amodei-the-adolescence-of-technology.md](sources/2026/04/9fb8cad79a71-dario-amodei-the-adolescence-of-technology.md)

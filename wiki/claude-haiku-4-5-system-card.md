@@ -33,4 +33,4 @@ The October 2025 system card for [[Claude Haiku 4.5]], [[Anthropic]]'s small / f
 - **Timeline**: predates the 2026-02 Opus 4.6 inflection described in [[Something Big Is Happening]] by ~4 months; useful anchor for the pre-inflection baseline.
 
 ## Sources
-- [Claude Haiku 4.5 System Card](wiki/raw/Claude Haiku 4.5 System Card.pdf)
+- Archive: [claude-haiku-4-5-system-card.pdf](sources/2026/04/1b9ae5f4f66a-claude-haiku-4-5-system-card.pdf)

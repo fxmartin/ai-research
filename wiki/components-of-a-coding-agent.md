@@ -34,4 +34,5 @@ A 2026-04-04 reference piece by [[Sebastian Raschka]] laying out the design of m
 - **In this wiki**: connects to [[Something Big Is Happening]] (which describes the *effect* of harness-driven agents — "walk away for four hours, come back to finished work") and to [[Introducing Sonnet 4.6]] / [[Claude Opus 4.6 System Card]] (which benchmark *models* but are deployed through exactly the kind of harness Raschka dissects here).
 
 ## Sources
-- [Components of A Coding Agent](wiki/raw/Components of A Coding Agent.md) (https://magazine.sebastianraschka.com/p/components-of-a-coding-agent)
+- URL: https://magazine.sebastianraschka.com/p/components-of-a-coding-agent
+- Archive: [components-of-a-coding-agent.md](sources/2026/04/bed829db41af-components-of-a-coding-agent.md)

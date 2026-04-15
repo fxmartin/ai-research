@@ -36,4 +36,5 @@ A July 2025 survey by [[Sebastian Raschka]] walking through the structural desig
 - **In this wiki**: complements [[Understanding Large Language Models]] (Raschka's earlier 2023 primer on the same machinery) and [[Components of A Coding Agent]] (harness-layer companion to this model-layer survey).
 
 ## Sources
-- [The Big LLM Architecture Comparison](wiki/raw/The Big LLM Architecture Comparison.md) (https://magazine.sebastianraschka.com/p/the-big-llm-architecture-comparison)
+- URL: https://magazine.sebastianraschka.com/p/the-big-llm-architecture-comparison
+- Archive: [the-big-llm-architecture-comparison.md](sources/2026/04/944cdcddb530-the-big-llm-architecture-comparison.md)

@@ -33,4 +33,5 @@ title: Dario Amodei
 - **Cited in this wiki**: [[Something Big Is Happening]] quotes his 2027 "country of 50 million geniuses" thought experiment.
 
 ## Sources
-- [Dario Amodei](wiki/raw/Dario Amodei.md) (https://en.wikipedia.org/wiki/Dario_Amodei)
+- URL: https://en.wikipedia.org/wiki/Dario_Amodei
+- Archive: [dario-amodei.md](sources/2026/04/b02bb412e14c-dario-amodei.md)

@@ -37,4 +37,3 @@ The April 2026 system card for [[Claude Mythos Preview]], [[Anthropic]]'s most c
 - **Cited-by in this wiki**: [[Anthropic's Project Glasswing — restricting Claude Mythos to security researchers]] — Willison quotes the cyber-capability findings directly from this card.
 
 ## Sources
-- [Claude Mythos Preview System Card](wiki/raw/Claude Mythos Preview System Card (3).pdf)

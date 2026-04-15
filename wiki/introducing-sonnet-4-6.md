@@ -35,4 +35,5 @@ title: Introducing Sonnet 4.6
 - **In this wiki**: follows the Opus 4.6 + GPT-5.3 Codex inflection point discussed in [[Something Big Is Happening]], and the restricted-release pattern of [[Claude Mythos Preview]] ([[Project Glasswing]]).
 
 ## Sources
-- [Introducing Sonnet 4.6](wiki/raw/Introducing Sonnet 4.6.md) (https://www.anthropic.com/news/claude-sonnet-4-6)
+- URL: https://www.anthropic.com/news/claude-sonnet-4-6
+- Archive: [introducing-sonnet-4-6.md](sources/2026/04/0af76ce9e49a-introducing-sonnet-4-6.md)

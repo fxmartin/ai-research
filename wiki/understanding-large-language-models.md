@@ -31,4 +31,5 @@ A 2023-04-16 primer by [[Sebastian Raschka]] — a curated reading list and narr
 - **In this wiki**: useful baseline for readers approaching frontier-model cards ([[Claude Opus 4.6 System Card]], [[Claude Mythos Preview System Card]]) without a prior LLM background.
 
 ## Sources
-- [Understanding Large Language Models](wiki/raw/Understanding Large Language Models.md) (https://magazine.sebastianraschka.com/p/understanding-large-language-models)
+- URL: https://magazine.sebastianraschka.com/p/understanding-large-language-models
+- Archive: [understanding-large-language-models.md](sources/2026/04/84139e725215-understanding-large-language-models.md)

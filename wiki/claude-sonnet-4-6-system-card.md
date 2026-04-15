@@ -34,4 +34,4 @@ The February 17, 2026 system card backing the [[Claude Sonnet 4.6]] release (the
 - **In this wiki**: [[Something Big Is Happening]] frames the Opus 4.6 / GPT-5.3 Codex inflection point; Sonnet 4.6 extends that capability curve downmarket.
 
 ## Sources
-- [Claude Sonnet 4.6 System Card](wiki/raw/Claude Sonnet 4.6 System Card.pdf)
+- Archive: [claude-sonnet-4-6-system-card.pdf](sources/2026/04/672339ab327e-claude-sonnet-4-6-system-card.pdf)

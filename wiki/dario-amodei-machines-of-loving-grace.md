@@ -32,4 +32,5 @@ The October 2024 optimistic-case essay by [[Dario Amodei]] ([[Anthropic]] CEO) l
 - **Contrast**: [[Something Big Is Happening]] is the popular-audience version of the same acceleration argument; MLG is the policy-register version.
 
 ## Sources
-- [Dario Amodei — Machines of Loving Grace](wiki/raw/Dario Amodei — Machines of Loving Grace.md) (https://www.darioamodei.com/essay/machines-of-loving-grace)
+- URL: https://www.darioamodei.com/essay/machines-of-loving-grace
+- Archive: [dario-amodei-machines-of-loving-grace.md](sources/2026/04/fe2b9f7bd693-dario-amodei-machines-of-loving-grace.md)

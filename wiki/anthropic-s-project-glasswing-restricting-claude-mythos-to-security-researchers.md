@@ -37,4 +37,5 @@ A 2026-04-07 blog post by [[Simon Willison]] reacting to [[Anthropic]]'s decisio
 - **Companion source in this wiki**: the [[Claude Mythos Preview System Card]] is the primary document behind the claims Willison quotes.
 
 ## Sources
-- [Anthropic's Project Glasswing — restricting Claude Mythos to security researchers](wiki/raw/Anthropic’s Project Glasswing—restricting Claude Mythos to security researchers—sounds necessary to me.md) (https://simonwillison.net/2026/Apr/7/project-glasswing/)
+- URL: https://simonwillison.net/2026/Apr/7/project-glasswing/
+- Archive: [anthropics-project-glasswingrestricting-claude-mythos-to-security-researcherssou.md](sources/2026/04/48b877f1aa1a-anthropics-project-glasswingrestricting-claude-mythos-to-security-researcherssou.md)

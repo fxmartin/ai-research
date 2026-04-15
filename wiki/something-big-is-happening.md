@@ -34,4 +34,5 @@ A February 2026 personal essay by [[Matt Shumer]], founder of an AI startup, wri
 - **Tone**: first-person essay; explicitly non-technical audience; urgency framing.
 
 ## Sources
-- [Something Big Is Happening](wiki/raw/Something Big Is Happening.md) (https://shumer.dev/something-big-is-happening)
+- URL: https://shumer.dev/something-big-is-happening
+- Archive: [something-big-is-happening.md](sources/2026/04/6477da70d562-something-big-is-happening.md)
