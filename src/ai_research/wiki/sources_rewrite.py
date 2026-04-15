@@ -116,7 +116,7 @@ def _rewrite_page_body(
 
     If the page has no ``## Sources`` section, returns ``body`` unchanged.
     """
-    above, bullet_lines = _split_body(body)
+    above, bullet_lines, trailing = _split_body(body)
     if not bullet_lines and SOURCES_HEADING not in body:
         return body
 
@@ -150,8 +150,14 @@ def _rewrite_page_body(
     rebuilt = render_sources_section(augmented)
     above_trimmed = above.rstrip("\n")
     if above_trimmed:
-        return f"{above_trimmed}\n\n{rebuilt}"
-    return rebuilt
+        result = f"{above_trimmed}\n\n{rebuilt}"
+    else:
+        result = rebuilt
+    if trailing:
+        result = f"{result.rstrip()}\n\n{trailing}"
+        if not result.endswith("\n"):
+            result += "\n"
+    return result
 
 
 def _page_hashes(

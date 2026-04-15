@@ -354,3 +354,82 @@ def test_archive_label_short_hexlike_prefix_not_stripped() -> None:
     out = render_sources_section([entry])
     # The 3-char hex-like prefix must remain in the label.
     assert f"- Archive: [abc-short.pdf]({archive})\n" in out
+
+
+# ---------------------------------------------------------------------------
+# Issue #48 — preserve body content after ## Sources section
+# ---------------------------------------------------------------------------
+
+
+def test_merge_preserves_trailing_h2_sections_after_sources() -> None:
+    """Regression: draft with ## Sources before ## Summary must keep Summary.
+
+    Pre-fix, _split_body dropped everything after the Sources bullets, so
+    materialize silently emptied Summary / Key Claims / Connections.
+    """
+    body = (
+        "# Title\n"
+        "## Sources\n"
+        "- URL: https://example.com\n"
+        "\n"
+        "## Summary\n"
+        "Body content here.\n"
+        "\n"
+        "## Key Claims\n"
+        "- A claim.\n"
+    )
+    entry = SourceEntry(
+        title="Example",
+        path="sources/2026/04/aa-example.md",
+        url="https://example.com",
+    )
+    out = merge_sources_section(body, entry)
+    assert "## Summary" in out
+    assert "Body content here." in out
+    assert "## Key Claims" in out
+    assert "- A claim." in out
+    # Sources section still intact with the URL bullet.
+    assert "## Sources" in out
+    assert "- URL: https://example.com" in out
+
+
+def test_merge_preserves_trailing_is_idempotent() -> None:
+    """Calling merge_sources_section twice with the same entry is a no-op."""
+    body = "# Title\n## Sources\n- URL: https://example.com\n\n## Summary\nBody.\n"
+    entry = SourceEntry(
+        title="Example",
+        path="sources/2026/04/aa-example.md",
+        url="https://example.com",
+    )
+    once = merge_sources_section(body, entry)
+    twice = merge_sources_section(once, entry)
+    assert once == twice
+
+
+def test_merge_no_sources_heading_preserves_full_body() -> None:
+    """No existing ## Sources → full original body preserved, section appended."""
+    body = "# Title\n\n## Summary\nAll the content.\n\n## Key Claims\n- X.\n"
+    entry = SourceEntry(
+        title="Example",
+        path="sources/2026/04/aa-example.md",
+        url="https://example.com",
+    )
+    out = merge_sources_section(body, entry)
+    # Original body fully preserved at the top.
+    assert out.startswith("# Title\n\n## Summary\nAll the content.\n\n## Key Claims\n- X.\n")
+    # Sources appended at the end.
+    assert out.rstrip().endswith("- URL: https://example.com")
+
+
+def test_merge_empty_sources_section_next_h2_immediately_preserves_trailing() -> None:
+    """Empty ## Sources (no bullets) followed directly by another H2 keeps trailing."""
+    body = "# Title\n## Sources\n## Summary\nBody text.\n"
+    entry = SourceEntry(
+        title="Example",
+        path="sources/2026/04/aa-example.md",
+        url="https://example.com",
+    )
+    out = merge_sources_section(body, entry)
+    assert "## Summary" in out
+    assert "Body text." in out
+    assert "- URL: https://example.com" in out

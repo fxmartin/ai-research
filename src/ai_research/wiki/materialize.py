@@ -289,7 +289,7 @@ def materialize(  # noqa: PLR0913 — CLI-shaped keyword API, not hot path.
     base_body = post.content
     existing_body = _read_existing_body(page_path)
     if existing_body is not None:
-        _, prior_bullets = _split_body_for_sources(existing_body)
+        _, prior_bullets, _ = _split_body_for_sources(existing_body)
         if prior_bullets:
             # Preserve existing sources: merge them into the draft body first.
             for line in prior_bullets:
@@ -366,11 +366,13 @@ def materialize(  # noqa: PLR0913 — CLI-shaped keyword API, not hot path.
     )
 
 
-def _split_body_for_sources(body: str) -> tuple[str, list[str]]:
-    """Split body into (text-above-Sources, existing-bullet-lines).
+def _split_body_for_sources(body: str) -> tuple[str, list[str], str]:
+    """Split body into (text-above-Sources, bullet-lines, trailing).
 
-    This is a helper for materialize to extract prior source entries
-    for preservation during re-materialization. Delegates to sources module.
+    Helper for materialize to extract prior source entries for preservation
+    during re-materialization. Delegates to sources module. The trailing
+    element (Issue #48) is propagated so callers can preserve any body
+    content that followed the Sources section.
     """
     from ai_research.wiki.sources import _split_body
 
