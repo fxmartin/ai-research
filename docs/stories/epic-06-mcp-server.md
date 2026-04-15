@@ -55,7 +55,7 @@
 **Technical Notes**: Keep state-handles pooled; tool handlers share them. No per-call disk re-read except for `index.md` when stale.
 
 **Definition of Done**:
-- [ ] Bootstrap module + tests.
+- [x] Bootstrap module + tests.
 
 **Dependencies**: 06.1-001, 01.1-002
 **Risk Level**: Low
@@ -219,7 +219,7 @@
 ## Epic Progress
 
 - [ ] Story 06.1-001 (2 pts)
-- [ ] Story 06.1-002 (2 pts)
+- [x] Story 06.1-002 (2 pts)
 - [ ] Story 06.2-001 (5 pts)
 - [ ] Story 06.2-002 (2 pts)
 - [ ] Story 06.2-003 (2 pts)
