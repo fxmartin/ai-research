@@ -96,9 +96,7 @@ def test_readme_mentions_ripgrep_prerequisite(readme_text: str) -> None:
     """ripgrep must be listed as a prerequisite."""
     # Accept either the binary name or the package name
     mentions_rg = (
-        "ripgrep" in readme_text
-        or "`rg`" in readme_text
-        or "brew install ripgrep" in readme_text
+        "ripgrep" in readme_text or "`rg`" in readme_text or "brew install ripgrep" in readme_text
     )
     assert mentions_rg, "README must mention ripgrep as a prerequisite"
 
@@ -139,7 +137,7 @@ def test_readme_ingest_inbox_loop_mode(readme_text: str) -> None:
 
 def test_readme_ingest_inbox_headless_mode(readme_text: str) -> None:
     """Acceptance Criteria: README must show headless `claude -p '/ingest-inbox'`."""
-    assert 'claude -p' in readme_text, (
+    assert "claude -p" in readme_text, (
         "README must show headless invocation via `claude -p` for scheduled / "
         "pipeline use (e.g. launchd, cron)"
     )
@@ -148,11 +146,13 @@ def test_readme_ingest_inbox_headless_mode(readme_text: str) -> None:
 def test_readme_has_three_invocation_modes_table_or_section(readme_text: str) -> None:
     """README must document all three invocation modes: interactive, loop/watcher,
     and headless/scheduled."""
-    modes_found = sum([
-        "Interactive" in readme_text or "interactive" in readme_text,
-        "/loop" in readme_text,
-        "Headless" in readme_text or "headless" in readme_text or "scheduled" in readme_text,
-    ])
+    modes_found = sum(
+        [
+            "Interactive" in readme_text or "interactive" in readme_text,
+            "/loop" in readme_text,
+            "Headless" in readme_text or "headless" in readme_text or "scheduled" in readme_text,
+        ]
+    )
     assert modes_found == 3, (
         f"README must document all three invocation modes (interactive, loop, "
         f"headless); only {modes_found}/3 were detected"
@@ -251,8 +251,7 @@ def test_readme_links_to_requirements(readme_text: str) -> None:
 def test_readme_links_to_karpathy_gist(readme_text: str) -> None:
     """Definition of Done: README must link to the Karpathy LLM-Wiki gist."""
     assert "karpathy" in readme_text.lower(), (
-        "README must link to or credit Karpathy's LLM-Wiki gist "
-        "(Definition of Done for 04.3-002)"
+        "README must link to or credit Karpathy's LLM-Wiki gist (Definition of Done for 04.3-002)"
     )
 
 
@@ -264,9 +263,7 @@ def test_readme_links_to_karpathy_gist(readme_text: str) -> None:
 def test_readme_has_ci_badge(readme_text: str) -> None:
     """README must include a CI status badge so readers can see build health."""
     has_badge = "badge.svg" in readme_text or "shields.io" in readme_text or "[![CI" in readme_text
-    assert has_badge, (
-        "README must include a CI status badge (e.g. GitHub Actions badge)"
-    )
+    assert has_badge, "README must include a CI status badge (e.g. GitHub Actions badge)"
 
 
 # ---------------------------------------------------------------------------
