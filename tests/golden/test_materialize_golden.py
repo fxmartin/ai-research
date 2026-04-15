@@ -43,6 +43,7 @@ def test_materialize_golden(
         wiki_dir=wiki_dir,
         state_path=state_path,
         now=FIXED_NOW,
+        no_archive=True,
     )
     assert result.status is MaterializeStatus.CREATED
 

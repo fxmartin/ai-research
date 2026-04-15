@@ -44,6 +44,7 @@ def test_unchanged_source_hash_is_noop(tmp_path: Path) -> None:
         wiki_dir=wiki_dir,
         state_path=state_path,
         now=FIXED_NOW,
+        no_archive=True,
     )
     assert r1.status is MaterializeStatus.CREATED
     mtime_before = r1.page_path.stat().st_mtime_ns
@@ -57,6 +58,7 @@ def test_unchanged_source_hash_is_noop(tmp_path: Path) -> None:
         wiki_dir=wiki_dir,
         state_path=state_path,
         now=LATER_NOW,
+        no_archive=True,
     )
     assert r2.status is MaterializeStatus.SKIPPED
     assert r2.page_path == r1.page_path
@@ -80,6 +82,7 @@ def test_locked_page_is_not_overwritten(tmp_path: Path) -> None:
         wiki_dir=wiki_dir,
         state_path=state_path,
         now=FIXED_NOW,
+        no_archive=True,
     )
     # Flip lock on.
     post = frontmatter.loads(r1.page_path.read_text(encoding="utf-8"))
@@ -98,6 +101,7 @@ def test_locked_page_is_not_overwritten(tmp_path: Path) -> None:
         wiki_dir=wiki_dir,
         state_path=state_path,
         now=LATER_NOW,
+        no_archive=True,
     )
     assert r2.status is MaterializeStatus.LOCKED
     assert r2.page_path.stat().st_mtime_ns == mtime_before
@@ -117,6 +121,7 @@ def test_changed_source_hash_updates_page(tmp_path: Path) -> None:
         wiki_dir=wiki_dir,
         state_path=state_path,
         now=FIXED_NOW,
+        no_archive=True,
     )
     old_hash = r1.source_hash
 
@@ -130,6 +135,7 @@ def test_changed_source_hash_updates_page(tmp_path: Path) -> None:
         wiki_dir=wiki_dir,
         state_path=state_path,
         now=LATER_NOW,
+        no_archive=True,
     )
     assert r2.status is MaterializeStatus.UPDATED
     assert r2.source_hash != old_hash
@@ -162,6 +168,7 @@ def test_force_bypasses_lock(tmp_path: Path) -> None:
         wiki_dir=wiki_dir,
         state_path=state_path,
         now=FIXED_NOW,
+        no_archive=True,
     )
     post = frontmatter.loads(r1.page_path.read_text(encoding="utf-8"))
     post["locked"] = True
@@ -177,6 +184,7 @@ def test_force_bypasses_lock(tmp_path: Path) -> None:
         state_path=state_path,
         now=LATER_NOW,
         force=True,
+        no_archive=True,
     )
     assert r2.status is MaterializeStatus.UPDATED
     post_after = frontmatter.loads(r2.page_path.read_text(encoding="utf-8"))
@@ -198,6 +206,7 @@ def test_force_on_unchanged_hash_still_rewrites(tmp_path: Path) -> None:
         wiki_dir=wiki_dir,
         state_path=state_path,
         now=FIXED_NOW,
+        no_archive=True,
     )
     r2 = materialize(
         source=source,
@@ -206,6 +215,7 @@ def test_force_on_unchanged_hash_still_rewrites(tmp_path: Path) -> None:
         state_path=state_path,
         now=LATER_NOW,
         force=True,
+        no_archive=True,
     )
     assert r2.status is MaterializeStatus.UPDATED
     post = frontmatter.loads(r2.page_path.read_text(encoding="utf-8"))
@@ -225,6 +235,7 @@ def test_cli_emits_status_and_exits_zero_on_skip(tmp_path: Path) -> None:
     runner = CliRunner()
     args = [
         "materialize",
+            "--no-archive",
         "--source",
         str(source),
         "--from",
@@ -255,6 +266,7 @@ def test_cli_warns_and_exits_zero_when_locked(tmp_path: Path) -> None:
     runner = CliRunner()
     args = [
         "materialize",
+            "--no-archive",
         "--source",
         str(source),
         "--from",
@@ -292,6 +304,7 @@ def test_cli_force_flag(tmp_path: Path) -> None:
     runner = CliRunner()
     base = [
         "materialize",
+            "--no-archive",
         "--source",
         str(source),
         "--from",
@@ -330,6 +343,7 @@ def test_page_recorded_in_state_but_missing_on_disk_recreates(tmp_path: Path) ->
         wiki_dir=wiki_dir,
         state_path=state_path,
         now=FIXED_NOW,
+        no_archive=True,
     )
     r1.page_path.unlink()
 
@@ -339,6 +353,7 @@ def test_page_recorded_in_state_but_missing_on_disk_recreates(tmp_path: Path) ->
         wiki_dir=wiki_dir,
         state_path=state_path,
         now=LATER_NOW,
+        no_archive=True,
     )
     assert r2.status is MaterializeStatus.CREATED
     assert r2.page_path.exists()

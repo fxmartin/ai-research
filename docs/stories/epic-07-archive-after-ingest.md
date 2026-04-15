@@ -58,9 +58,9 @@
 **Technical Notes**: Call order: `atomic_write(page)` → `retire_stub_if_exists` → `archive_source` → `save_state` (with `archive_path` set). Rollback path on archive failure: re-load state before the save, so the partial page is still recorded but the hash→archive mapping is deferred; alternatively, wrap in a try/except that surfaces the collision to the operator. Add the `--no-archive` escape hatch for power users who pre-archived.
 
 **Definition of Done**:
-- [ ] Unit tests: archive move happens on CREATED, UPDATED, and SKIPPED; not on LOCKED or error.
-- [ ] Golden-file test: `wiki/raw/` is empty after a materialize run; `sources/` contains exactly the archived file.
-- [ ] `materialize --no-archive` bypass works and documented.
+- [x] Unit tests: archive move happens on CREATED, UPDATED, and SKIPPED; not on LOCKED or error.
+- [x] Golden-file test: `wiki/raw/` is empty after a materialize run; `sources/` contains exactly the archived file.
+- [x] `materialize --no-archive` bypass works and documented.
 
 **Dependencies**: 07.1-001.
 **Risk Level**: Medium

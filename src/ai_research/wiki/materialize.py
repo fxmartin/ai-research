@@ -36,7 +36,7 @@ from typing import TextIO
 
 import frontmatter
 
-from ai_research.archive import slugify
+from ai_research.archive import archive_source, slugify
 from ai_research.state import SourceRecord, State, atomic_write, load_state, save_state
 from ai_research.wiki.index_rebuild import rebuild_index
 from ai_research.wiki.sources import SourceEntry, merge_sources_section
@@ -136,6 +136,8 @@ def materialize(  # noqa: PLR0913 — CLI-shaped keyword API, not hot path.
     force: bool = False,
     index_path: Path | None = None,
     skip_index: bool = False,
+    sources_root: Path | None = None,
+    no_archive: bool = False,
 ) -> MaterializeResult:
     """Write ``wiki/<slug>.md`` from a draft and record state, idempotently.
 
@@ -158,6 +160,11 @@ def materialize(  # noqa: PLR0913 — CLI-shaped keyword API, not hot path.
             ``index_path`` is None.
         skip_index: Opt-out switch for bulk callers — suppress the auto
             index rebuild even when ``index_path`` is set.
+        sources_root: Root of the immutable ``sources/`` archive. Defaults
+            to ``wiki_dir.parent / "sources"`` when omitted (Story 07.1-002).
+        no_archive: When True, skip the archive move entirely. Useful when
+            the source has been pre-archived externally, or in tests that
+            want to preserve the source file at its original location.
 
     Returns:
         :class:`MaterializeResult` with the final page path, source hash,
@@ -176,6 +183,11 @@ def materialize(  # noqa: PLR0913 — CLI-shaped keyword API, not hot path.
     slug = slugify(title)
     timestamp = (now or datetime.now(tz=UTC)).astimezone(UTC)
     source_hash = _sha256_of_file(source)
+    # Default archive root: sibling of wiki_dir (repo layout: <root>/wiki,
+    # <root>/sources). Callers can override for tests or non-standard layouts.
+    resolved_sources_root = (
+        Path(sources_root) if sources_root is not None else Path(wiki_dir).parent / "sources"
+    )
 
     candidate_path = Path(wiki_dir) / f"{slug}.md"
     state: State = load_state(state_path)
@@ -207,8 +219,26 @@ def materialize(  # noqa: PLR0913 — CLI-shaped keyword API, not hot path.
                 status=MaterializeStatus.LOCKED,
             )
 
-        # Hash unchanged and not forcing: pure no-op.
+        # Hash unchanged and not forcing: pure no-op for the page, but
+        # still archive the source bytes if they haven't landed yet
+        # (Story 07.1-002 AC: SKIPPED still archives — idempotent).
         if existing_hash == source_hash and not force:
+            if not no_archive and source.exists():
+                archived = archive_source(
+                    source=source,
+                    sources_root=resolved_sources_root,
+                    title=title,
+                    now=timestamp,
+                )
+                # Refresh archive_path in state even on SKIPPED so older
+                # records gain the new shape on first re-ingest.
+                state = load_state(state_path)
+                rel_page = _relative_or_absolute(page_path, state_path)
+                archive_rel = _relative_or_absolute(archived, state_path)
+                state.sources[source_hash] = SourceRecord(
+                    page=rel_page, archive_path=archive_rel
+                )
+                save_state(state_path, state)
             return MaterializeResult(
                 page_path=page_path,
                 source_hash=source_hash,
@@ -270,17 +300,34 @@ def materialize(  # noqa: PLR0913 — CLI-shaped keyword API, not hot path.
         skip_slugs={slug},
     )
 
-    # Update state.json after the page lands so a crash mid-page-write never
-    # leaves state pointing at a non-existent file.
+    # Archive the source bytes into <sources_root>/<yyyy>/<mm>/<hash12>-<slug>.<ext>
+    # AFTER the page write succeeds, so a crash mid-page-write leaves the
+    # source in place for retry. On archive failure (e.g. hash collision),
+    # the page is preserved but state is NOT polluted with a bogus
+    # archive_path — we simply propagate the exception (Story 07.1-002 AC).
+    archive_path_value: str | None = None
+    if not no_archive and source.exists():
+        archived = archive_source(
+            source=source,
+            sources_root=resolved_sources_root,
+            title=title,
+            now=timestamp,
+        )
+        archive_path_value = _relative_or_absolute(archived, state_path)
+
+    # Update state.json after the page lands AND the archive move succeeds,
+    # so a crash mid-page-write never leaves state pointing at a non-existent
+    # file, and a failed archive never leaves state with a bogus archive_path.
     # Reload — atomic_write doesn't touch state, but existing_page resolution
     # earlier may have been against a stale view if callers shared state.
     state = load_state(state_path)
     rel_page = _relative_or_absolute(page_path, state_path)
-    # Preserve any existing archive_path (e.g. from a prior archive move);
-    # 07.1-001 only records the shape, 07.1-002 will set archive_path here.
-    prior = state.sources.get(source_hash)
-    prior_archive = prior.archive_path if prior is not None else None
-    state.sources[source_hash] = SourceRecord(page=rel_page, archive_path=prior_archive)
+    # Preserve any existing archive_path when we didn't just archive
+    # (e.g. --no-archive re-materialize).
+    if archive_path_value is None:
+        prior = state.sources.get(source_hash)
+        archive_path_value = prior.archive_path if prior is not None else None
+    state.sources[source_hash] = SourceRecord(page=rel_page, archive_path=archive_path_value)
     existing_hashes = state.pages.get(rel_page, [])
     if source_hash not in existing_hashes:
         existing_hashes.append(source_hash)

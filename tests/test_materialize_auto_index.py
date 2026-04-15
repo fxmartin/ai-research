@@ -43,6 +43,7 @@ def test_materialize_created_triggers_index_rebuild(tmp_path: Path) -> None:
         state_path=state_path,
         index_path=index_path,
         now=FIXED_NOW,
+        no_archive=True,
     )
 
     assert result.status is MaterializeStatus.CREATED
@@ -62,6 +63,7 @@ def test_materialize_updated_triggers_index_rebuild(tmp_path: Path) -> None:
         state_path=state_path,
         index_path=index_path,
         now=FIXED_NOW,
+        no_archive=True,
     )
 
     # Change source contents so hash differs -> UPDATED on re-materialize.
@@ -76,6 +78,7 @@ def test_materialize_updated_triggers_index_rebuild(tmp_path: Path) -> None:
         state_path=state_path,
         index_path=index_path,
         now=FIXED_NOW,
+        no_archive=True,
     )
 
     assert result.status is MaterializeStatus.UPDATED
@@ -92,6 +95,7 @@ def test_materialize_skipped_does_not_rebuild_index(tmp_path: Path) -> None:
         state_path=state_path,
         index_path=index_path,
         now=FIXED_NOW,
+        no_archive=True,
     )
     # Delete the index; a SKIPPED run must NOT recreate it.
     index_path.unlink()
@@ -103,6 +107,7 @@ def test_materialize_skipped_does_not_rebuild_index(tmp_path: Path) -> None:
         state_path=state_path,
         index_path=index_path,
         now=FIXED_NOW,
+        no_archive=True,
     )
 
     assert result.status is MaterializeStatus.SKIPPED
@@ -119,6 +124,7 @@ def test_materialize_locked_does_not_rebuild_index(tmp_path: Path) -> None:
         state_path=state_path,
         index_path=index_path,
         now=FIXED_NOW,
+        no_archive=True,
     )
 
     # Flip the page's frontmatter to locked.
@@ -137,6 +143,7 @@ def test_materialize_locked_does_not_rebuild_index(tmp_path: Path) -> None:
         state_path=state_path,
         index_path=index_path,
         now=FIXED_NOW,
+        no_archive=True,
     )
 
     assert result.status is MaterializeStatus.LOCKED
@@ -154,6 +161,7 @@ def test_materialize_skip_index_opt_out(tmp_path: Path) -> None:
         index_path=index_path,
         skip_index=True,
         now=FIXED_NOW,
+        no_archive=True,
     )
 
     assert result.status is MaterializeStatus.CREATED
@@ -170,6 +178,7 @@ def test_materialize_no_index_path_leaves_index_alone(tmp_path: Path) -> None:
         wiki_dir=wiki_dir,
         state_path=state_path,
         now=FIXED_NOW,
+        no_archive=True,
     )
 
     assert result.status is MaterializeStatus.CREATED
@@ -192,6 +201,7 @@ def test_cli_materialize_rebuilds_index_by_default(tmp_path: Path, runner: CliRu
         app,
         [
             "materialize",
+            "--no-archive",
             "--source",
             str(source),
             "--from",
@@ -216,6 +226,7 @@ def test_cli_materialize_skip_index_flag(tmp_path: Path, runner: CliRunner) -> N
         app,
         [
             "materialize",
+            "--no-archive",
             "--source",
             str(source),
             "--from",

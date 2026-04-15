@@ -159,6 +159,7 @@ def test_materialize_creates_stubs_for_wikilinks(tmp_path: Path) -> None:
         wiki_dir=wiki_dir,
         state_path=state_path,
         now=FIXED_NOW,
+        no_archive=True,
     )
 
     assert (wiki_dir / "concepts" / "attention.md").exists()
@@ -185,6 +186,7 @@ def test_materialize_does_not_stub_self_reference(tmp_path: Path) -> None:
         wiki_dir=wiki_dir,
         state_path=state_path,
         now=FIXED_NOW,
+        no_archive=True,
     )
 
     # The main page exists; no redundant stub.
@@ -231,6 +233,7 @@ def test_cli_materialize_requires_source_without_stub(tmp_path: Path) -> None:
         app,
         [
             "materialize",
+            "--no-archive",
             "--from",
             str(tmp_path / "d.md"),
             "--wiki-dir",
@@ -338,6 +341,7 @@ def test_materialize_retires_stub_when_full_page_written(tmp_path: Path) -> None
         wiki_dir=wiki,
         state_path=state_file,
         now=FIXED_NOW,
+        no_archive=True,
     )
     assert result.page_path == wiki / "dario-amodei.md"
     assert result.page_path.exists()
