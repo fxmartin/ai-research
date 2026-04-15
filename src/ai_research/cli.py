@@ -26,6 +26,11 @@ from ai_research.extract import (
 )
 from ai_research.scan import DEFAULT_MIN_AGE_SECONDS, scan_raw
 from ai_research.search import run_search
+from ai_research.source_lookup import (
+    LookupError,
+    StubOnlyError,
+    lookup_source_by_slug,
+)
 from ai_research.state import load_state
 from ai_research.wiki.ask import AskPayloadError, check_citations
 from ai_research.wiki.index_rebuild import rebuild_index as rebuild_index_impl
@@ -386,6 +391,85 @@ def vault_lint(
     typer.echo(json.dumps(report.to_dict()))
     if not report.ok:
         raise typer.Exit(code=1)
+
+
+source_app = typer.Typer(
+    name="source",
+    help="Inspect archived source bytes behind a wiki page.",
+    no_args_is_help=True,
+)
+app.add_typer(source_app, name="source")
+
+
+@source_app.command("lookup")
+def source_lookup(
+    slug: str = typer.Argument(..., help="Wiki page slug, e.g. 'dario-amodei'."),
+    state_file: Path = typer.Option(  # noqa: B008
+        Path(".ai-research/state.json"),
+        "--state-file",
+        help="Path to state.json used for the reverse lookup.",
+    ),
+    wiki_dir: Path = typer.Option(  # noqa: B008
+        Path("wiki"),
+        "--wiki-dir",
+        help="Root of the wiki vault; used to distinguish stub-only slugs.",
+    ),
+    as_json: bool = typer.Option(  # noqa: B008
+        False,
+        "--json",
+        help="Emit a JSON payload instead of plain text.",
+    ),
+) -> None:
+    """Print the archived source path behind a wiki page slug.
+
+    Exit codes:
+
+    * ``0`` — page found; archive path (or a "not archived" note for pre-07.1
+      records) emitted.
+    * ``1`` — slug unknown, or resolves only to a concept stub.
+    * ``2`` — state file missing / unreadable.
+    """
+    if not state_file.exists():
+        typer.echo(f"source lookup: state file not found: {state_file}", err=True)
+        raise typer.Exit(code=2)
+
+    try:
+        state = load_state(state_file)
+    except ValueError as exc:
+        typer.echo(f"source lookup: {exc}", err=True)
+        raise typer.Exit(code=2) from exc
+
+    try:
+        result = lookup_source_by_slug(slug, state, wiki_dir=wiki_dir)
+    except StubOnlyError as exc:
+        typer.echo(f"source lookup: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+    except LookupError as exc:
+        typer.echo(f"source lookup: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+
+    if as_json:
+        typer.echo(
+            json.dumps(
+                {
+                    "slug": result.slug,
+                    "page": result.page,
+                    "archive_path": result.archive_path,
+                    "source_hash": result.source_hash,
+                }
+            )
+        )
+        return
+
+    if result.archive_path is None:
+        typer.echo(
+            f"source lookup: '{slug}' -> {result.page}: "
+            "source not archived (pre-migration ingest).",
+            err=True,
+        )
+        return
+
+    typer.echo(result.archive_path)
 
 
 if __name__ == "__main__":  # pragma: no cover
