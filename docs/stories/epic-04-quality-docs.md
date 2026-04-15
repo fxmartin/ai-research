@@ -106,7 +106,7 @@
 
 **Definition of Done**:
 - [x] `.github/workflows/ci.yml` committed.
-- [ ] Status badge in README.
+- [x] Status badge in README.
 
 **Dependencies**: 04.1-001, 04.2-001
 **Risk Level**: Low
