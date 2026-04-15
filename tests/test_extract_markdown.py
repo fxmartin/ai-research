@@ -98,6 +98,20 @@ def test_cli_extract_markdown_emits_json(tmp_path: Path) -> None:
     assert payload["metadata"]["sha256"] == _sha256(body.encode("utf-8"))
 
 
+def test_cli_extract_serializes_date_frontmatter(tmp_path: Path) -> None:
+    # Regression: #29 — PyYAML parses typed dates into datetime.date, which
+    # json.dump cannot serialize by default. The CLI must coerce to str.
+    body = "---\ntitle: Dated\npublished: 2026-02-09\n---\n# Dated\n"
+    src = tmp_path / "dated.md"
+    src.write_text(body, encoding="utf-8")
+
+    result = runner.invoke(app, ["extract", str(src)])
+
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.stdout)
+    assert payload["metadata"]["frontmatter"]["published"] == "2026-02-09"
+
+
 def test_cli_extract_missing_file_nonzero_exit(tmp_path: Path) -> None:
     result = runner.invoke(app, ["extract", str(tmp_path / "missing.md")])
     assert result.exit_code != 0

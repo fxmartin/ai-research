@@ -46,6 +46,8 @@ def scan_raw(
     A file is eligible when:
 
     * It is a regular file (directories and symlinks-to-dirs are ignored).
+    * Its name does not start with ``.`` (dotfiles like ``.gitkeep`` and
+      ``.DS_Store`` are never real sources).
     * Its mtime is at least ``min_age_seconds`` in the past — this guards
       against partial writes from a still-running copy.
     * If ``skip_known`` is set, its SHA-256 is not already present in
@@ -78,6 +80,8 @@ def scan_raw(
     eligible: list[str] = []
     for entry in sorted(raw_dir.iterdir()):
         if not entry.is_file():
+            continue
+        if entry.name.startswith("."):
             continue
         mtime = entry.stat().st_mtime
         if reference - mtime < min_age_seconds:
