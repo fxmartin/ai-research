@@ -125,8 +125,8 @@
 - **Given** a troubleshooting section **When** I hit "pdftotext not found" **Then** the fix is documented.
 
 **Definition of Done**:
-- [ ] `README.md` committed.
-- [ ] Links to REQUIREMENTS.md, STORIES.md, and the Karpathy gist.
+- [x] `README.md` committed.
+- [x] Links to REQUIREMENTS.md, STORIES.md, and the Karpathy gist.
 
 **Dependencies**: All MVP stories
 **Risk Level**: Low
@@ -139,6 +139,6 @@
 - [x] Story 04.1-002 (3 pts)
 - [x] Story 04.2-001 (3 pts)
 - [x] Story 04.3-001 (1 pt)
-- [ ] Story 04.3-002 (1 pt)
+- [x] Story 04.3-002 (1 pt)
 
-**Completed**: 4 / 5 stories · 10 / 11 pts.
+**Completed**: 5 / 5 stories · 11 / 11 pts.
