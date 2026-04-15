@@ -1,0 +1,46 @@
+{
+  "pages": {
+    "wiki/anthropic-s-project-glasswing-restricting-claude-mythos-to-security-researchers.md": [
+      "48b877f1aa1a06fa60b0ec7159ceac5bb3d5de775863e5efb1136add8e65b933"
+    ],
+    "wiki/claude-haiku-4-5-system-card.md": [
+      "1b9ae5f4f66a65c1b37a031179af3dba35959471a3a5d195e4fe700b87558141"
+    ],
+    "wiki/claude-mythos-preview-system-card.md": [
+      "2b1e0097352dc7cf21a564feab3c92dbf96f004b56329cc3976ceb8febe285cc"
+    ],
+    "wiki/claude-opus-4-6-system-card.md": [
+      "4db67c6b6aea0a87e7f8a784b83fc05a0f1a61a3e87615fe7956e3486b951b3c"
+    ],
+    "wiki/claude-sonnet-4-6-system-card.md": [
+      "672339ab327e8798578b3559e8489561db5ad25e81b427de4e306393108e90b6"
+    ],
+    "wiki/dario-amodei-machines-of-loving-grace.md": [
+      "fe2b9f7bd693d0239aa105e6c241c0569f67ddb55867e95384717928257a4de2"
+    ],
+    "wiki/dario-amodei-the-adolescence-of-technology.md": [
+      "9fb8cad79a7177c39c6fbbe82ac5bca6f7731497be25973031b4f8d628521bff"
+    ],
+    "wiki/dario-amodei.md": [
+      "b02bb412e14cc90da7549c81170e8484b51c62131523ad0e31c05d270db4687b"
+    ],
+    "wiki/introducing-sonnet-4-6.md": [
+      "0af76ce9e49a8735975655f0ef47295828b0156e9d8d30e8176afbc50c9b7cc2"
+    ],
+    "wiki/something-big-is-happening.md": [
+      "6477da70d562b739c5495c44272de34b9759089078f7d3b4fd6ee418107d3faa"
+    ]
+  },
+  "sources": {
+    "0af76ce9e49a8735975655f0ef47295828b0156e9d8d30e8176afbc50c9b7cc2": "wiki/introducing-sonnet-4-6.md",
+    "1b9ae5f4f66a65c1b37a031179af3dba35959471a3a5d195e4fe700b87558141": "wiki/claude-haiku-4-5-system-card.md",
+    "2b1e0097352dc7cf21a564feab3c92dbf96f004b56329cc3976ceb8febe285cc": "wiki/claude-mythos-preview-system-card.md",
+    "48b877f1aa1a06fa60b0ec7159ceac5bb3d5de775863e5efb1136add8e65b933": "wiki/anthropic-s-project-glasswing-restricting-claude-mythos-to-security-researchers.md",
+    "4db67c6b6aea0a87e7f8a784b83fc05a0f1a61a3e87615fe7956e3486b951b3c": "wiki/claude-opus-4-6-system-card.md",
+    "6477da70d562b739c5495c44272de34b9759089078f7d3b4fd6ee418107d3faa": "wiki/something-big-is-happening.md",
+    "672339ab327e8798578b3559e8489561db5ad25e81b427de4e306393108e90b6": "wiki/claude-sonnet-4-6-system-card.md",
+    "9fb8cad79a7177c39c6fbbe82ac5bca6f7731497be25973031b4f8d628521bff": "wiki/dario-amodei-the-adolescence-of-technology.md",
+    "b02bb412e14cc90da7549c81170e8484b51c62131523ad0e31c05d270db4687b": "wiki/dario-amodei.md",
+    "fe2b9f7bd693d0239aa105e6c241c0569f67ddb55867e95384717928257a4de2": "wiki/dario-amodei-machines-of-loving-grace.md"
+  }
+}
