@@ -116,7 +116,7 @@ def retire_stub_if_exists(slug: str, *, wiki_dir: Path) -> Path | None:
     if not stub_path.exists():
         return None
     try:
-        post = frontmatter.load(stub_path)
+        post = frontmatter.load(str(stub_path))
     except Exception:
         # Malformed stub — leave it alone and let a human triage.
         return None
