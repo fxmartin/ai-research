@@ -13,6 +13,8 @@ import asyncio
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
 
+from ai_research.mcp_server.context import build_context, set_context
+
 SERVER_NAME = "ai-research"
 SERVER_VERSION = "0.1.0"
 
@@ -28,6 +30,7 @@ def build_server() -> Server:
 
 async def _run() -> None:
     """Run the MCP server over stdio until the client disconnects."""
+    set_context(build_context())
     server = build_server()
     async with stdio_server() as (read_stream, write_stream):
         await server.run(
