@@ -89,6 +89,28 @@ records the original URL.
 
 If materialize reports `UNCHANGED` the source hash matched; treat as idempotent success.
 
+#### `--no-archive` opt-out
+
+Pass `--no-archive` to `ai-research materialize` when the source is **already
+under `sources/`** (e.g. you're re-materializing an Obsidian-side edit of a
+wiki page against its recorded archive path). This skips the archive-move step
+entirely so the source stays in place.
+
+```bash
+printf '%s' "$DRAFT" | uv run ai-research materialize \
+  --source "sources/2026/04/abcdef123456-foo.md" \
+  --stdin \
+  --skip-index \
+  --no-archive
+```
+
+Without `--no-archive`, `archive_source` detects the already-archived shape
+(canonical target path + matching SHA-256) and no-ops silently — running
+materialize a second time against a source that is literally at its archive
+path is safe. Use `--no-archive` only when you've pre-archived out-of-band
+and want to make the intent explicit (and keep `archive_path` untouched in
+`state.json`).
+
 ### 5. Rebuild the index
 
 Exactly once, at the end:

@@ -79,8 +79,8 @@
 **Technical Notes**: The `archive_source` helper already handles identical-hash idempotency; this story just surfaces the flag and documents when to use it.
 
 **Definition of Done**:
-- [ ] Flag documented in `--help` and in `.claude/commands/ingest.md`.
-- [ ] Test: re-running `materialize` against an already-archived source is a no-op.
+- [x] Flag documented in `--help` and in `.claude/commands/ingest.md`.
+- [x] Test: re-running `materialize` against an already-archived source is a no-op.
 
 **Dependencies**: 07.1-002.
 **Risk Level**: Low

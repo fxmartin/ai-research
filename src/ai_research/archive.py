@@ -174,7 +174,11 @@ def archive_source(
         incoming_hash = _sha256_of_file(src)
         existing_hash = _sha256_of_file(target)
         if incoming_hash == existing_hash:
-            src.unlink()
+            # Already-archived edge case (Story 07.1-003): if ``src`` IS the
+            # canonical archive path, unlinking would destroy the archive.
+            # Detect the aliased path and no-op silently instead.
+            if src.resolve() != target.resolve():
+                src.unlink()
             return target
         raise ArchiveHashCollisionError(
             f"archive target {target} exists with hash {existing_hash} "
