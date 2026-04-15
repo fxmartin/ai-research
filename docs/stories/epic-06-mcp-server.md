@@ -80,9 +80,9 @@
 **Technical Notes**: Key architectural question — **how does the MCP server do the LLM call?** Two options: (A) the MCP process itself calls Anthropic SDK (breaks the "no SDK in toolkit" rule but scoped to this binary only); (B) the server shells out to `claude -p "/ask ..." --output-format json`. Option B keeps the vendor-lock-in story coherent. Pick B for v1; document the per-call subprocess cost trade in the README. If latency hurts, revisit.
 
 **Definition of Done**:
-- [ ] `ask` tool registered; schema exposed via MCP `tools/list`.
-- [ ] Contract-level test against a fixture vault (slow, nightly).
-- [ ] Citation-integrity test.
+- [x] `ask` tool registered; schema exposed via MCP `tools/list`.
+- [x] Contract-level test against a fixture vault (slow, nightly).
+- [x] Citation-integrity test.
 
 **Dependencies**: 06.1-001, 06.1-002, 03.3-001 (`/ask` slash command), NFR-SCR-001
 **Risk Level**: High — latency via `claude -p` subprocess; drift risk if slash command evolves.
@@ -220,11 +220,11 @@
 
 - [ ] Story 06.1-001 (2 pts)
 - [x] Story 06.1-002 (2 pts)
-- [ ] Story 06.2-001 (5 pts)
+- [x] Story 06.2-001 (5 pts)
 - [x] Story 06.2-002 (2 pts)
 - [ ] Story 06.2-003 (2 pts)
 - [x] Story 06.2-004 (3 pts)
 - [ ] Story 06.3-001 (1 pt)
 - [ ] Story 06.3-002 (2 pts)
 
-**Completed**: 0 / 8 stories · 0 / 19 pts.
+**Completed**: 1 / 8 stories · 5 / 19 pts.

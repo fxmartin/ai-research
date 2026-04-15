@@ -7,9 +7,10 @@ server-level `list_tools` / `call_tool` decorators aggregate them.
 
 Stories:
 - 06.1-001: entry point + stdio loop.
+- 06.2-001: `ask` tool wired in.
 - 06.2-002: `search` tool wired in.
 - 06.2-003: `list_pages` tool wired in.
-Future: 06.2-001 (`ask`), 06.2-004 (`get_page`).
+- 06.2-004: `get_page` tool wired in.
 """
 
 from __future__ import annotations
@@ -22,6 +23,7 @@ from mcp.server import Server
 from mcp.server.stdio import stdio_server
 
 from ai_research.mcp_server.context import build_context, set_context
+from ai_research.mcp_server.tools import ask as ask_tool
 from ai_research.mcp_server.tools import get_page as get_page_tool
 from ai_research.mcp_server.tools import list_pages as list_pages_tool
 from ai_research.mcp_server.tools import search as search_tool
@@ -35,6 +37,7 @@ def build_server() -> Server:
     server: Server = Server(SERVER_NAME, version=SERVER_VERSION)
     registry: dict[str, dict[str, Any]] = {}
 
+    ask_tool.register(registry)
     search_tool.register(registry)
     get_page_tool.register(registry)
     list_pages_tool.register(registry)
