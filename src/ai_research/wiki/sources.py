@@ -12,11 +12,11 @@ For a source with both a URL and an archived local path::
 
     ## Sources
     - URL: https://example.com/foo
-    - Archive: [sources/2026/04/abcdef-foo.pdf](sources/2026/04/abcdef-foo.pdf)
+    - Archive: [foo.pdf](sources/2026/04/abcdef123456-foo.pdf)
 
 PDF source (no URL) with an archive path::
 
-    - Archive: [sources/2026/04/ab12-att.pdf](sources/2026/04/ab12-att.pdf)
+    - Archive: [att.pdf](sources/2026/04/ab12abcd1234-att.pdf)
 
 Pre-Epic-07 record (``archive_path=None``) carrying only a URL::
 
@@ -45,6 +45,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+from pathlib import PurePosixPath
 
 __all__ = [
     "SourceEntry",
@@ -59,6 +60,26 @@ SOURCES_HEADING = "## Sources"
 # New dual-bullet shapes (08.1-001).
 _URL_BULLET_RE = re.compile(r"^-\s*URL:\s*(?P<url>\S.*?)\s*$")
 _ARCHIVE_BULLET_RE = re.compile(r"^-\s*Archive:\s*\[(?P<label>[^\]]+)\]\((?P<path>[^)]+)\)\s*$")
+
+# Archive-label helper (08.3-001): strip the 12-char hex hash prefix from a
+# basename so the visible Obsidian link label reads as a human-friendly filename
+# (e.g. ``machines-of-loving-grace.md``) while the link target keeps the full
+# hashed path. Defensive: if the basename doesn't carry the expected
+# ``<12-hex>-`` prefix, return it unchanged.
+_HASH_PREFIX_RE = re.compile(r"^[a-f0-9]{12}-")
+
+
+def _archive_label(archive_path: str) -> str:
+    """Derive a human-readable Obsidian link label from ``archive_path``.
+
+    The final path segment is taken as the basename (including extension),
+    then any leading ``<12-hex>-`` hash prefix is stripped. Non-conforming
+    basenames (no hash prefix) are returned verbatim so the helper is safe
+    for historical or hand-authored archive entries.
+    """
+    basename = PurePosixPath(archive_path).name
+    return _HASH_PREFIX_RE.sub("", basename)
+
 
 # Legacy single-bullet shape: "- [title](path)" with optional " (url)" suffix.
 _LEGACY_ENTRY_RE = re.compile(
@@ -120,7 +141,8 @@ class SourceEntry:
         if self.url:
             bullets.append(f"- URL: {self.url}")
         if self.archive_path:
-            bullets.append(f"- Archive: [{self.archive_path}]({self.archive_path})")
+            label = _archive_label(self.archive_path)
+            bullets.append(f"- Archive: [{label}]({self.archive_path})")
         if not bullets:
             # Fully legacy fallback — no URL, no archive_path. Keep the
             # historical single-bullet rendering so pre-Epic-08 pages with
