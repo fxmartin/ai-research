@@ -256,3 +256,59 @@ def test_concepts_subdir_ignored(tmp_path: Path) -> None:
 
     results = rewrite_sources(wiki_dir=wiki_dir, state_path=state_file)
     assert results == []
+
+
+def test_empty_sources_section_seeded_for_single_source_page(tmp_path: Path) -> None:
+    """Issue #44: empty ## Sources + one archived source in state → seed Archive bullet."""
+    wiki_dir, state_file = _make_vault(tmp_path)
+    # Page has a literal empty Sources section (URL-less PDF, pre-Epic-07 ingest).
+    body = "# Mythos\n\nBody.\n\n## Sources\n"
+    _write_page(
+        wiki_dir / "mythos.md",
+        "title: Mythos\nsource_hash: h-m\nlocked: false\n",
+        body,
+    )
+    state = State(
+        sources={
+            "h-m": SourceRecord(
+                page="wiki/mythos.md",
+                archive_path="sources/2026/04/h-m-mythos.pdf",
+            ),
+        },
+        pages={"wiki/mythos.md": ["h-m"]},
+    )
+    save_state(state_file, state)
+
+    results = rewrite_sources(wiki_dir=wiki_dir, state_path=state_file)
+
+    assert [r.outcome for r in results] == [RewriteOutcome.UPDATED]
+    text = (wiki_dir / "mythos.md").read_text(encoding="utf-8")
+    assert "- Archive: [h-m-mythos.pdf](sources/2026/04/h-m-mythos.pdf)" in text
+    # Non-Sources content preserved.
+    assert "# Mythos" in text
+    assert "Body." in text
+
+
+def test_empty_sources_section_ambiguous_multi_source_not_seeded(tmp_path: Path) -> None:
+    """Multi-source page with empty ## Sources is left UNCHANGED (no ambiguous seeding)."""
+    wiki_dir, state_file = _make_vault(tmp_path)
+    body = "# Multi\n\n## Sources\n"
+    _write_page(
+        wiki_dir / "multi.md",
+        "title: Multi\nlocked: false\n",
+        body,
+    )
+    state = State(
+        sources={
+            "h1": SourceRecord(page="wiki/multi.md", archive_path="sources/2026/04/h1-a.md"),
+            "h2": SourceRecord(page="wiki/multi.md", archive_path="sources/2026/04/h2-b.md"),
+        },
+        pages={"wiki/multi.md": ["h1", "h2"]},
+    )
+    save_state(state_file, state)
+
+    before = (wiki_dir / "multi.md").read_bytes()
+    results = rewrite_sources(wiki_dir=wiki_dir, state_path=state_file)
+
+    assert [r.outcome for r in results] == [RewriteOutcome.UNCHANGED]
+    assert (wiki_dir / "multi.md").read_bytes() == before
