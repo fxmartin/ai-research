@@ -53,7 +53,7 @@ def test_legacy_url_only_page_is_backfilled(tmp_path: Path) -> None:
     new_text = (wiki_dir / "legacy.md").read_text(encoding="utf-8")
     assert "- URL: https://example.com/foo" in new_text
     assert (
-        "- Archive: [sources/2026/04/hash-legacy-foo.md]"
+        "- Archive: [hash-legacy-foo.md]"
         "(sources/2026/04/hash-legacy-foo.md)" in new_text
     )
     # Non-sources bytes preserved.
@@ -68,7 +68,7 @@ def test_new_page_with_both_bullets_is_unchanged(tmp_path: Path) -> None:
         "# Already New\n\n"
         "## Sources\n"
         "- URL: https://example.com/new\n"
-        "- Archive: [sources/2026/04/h2-new.md](sources/2026/04/h2-new.md)\n"
+        "- Archive: [h2-new.md](sources/2026/04/h2-new.md)\n"
     )
     _write_page(
         wiki_dir / "already-new.md",
@@ -176,7 +176,7 @@ def test_locked_page_rewritten_with_force(tmp_path: Path) -> None:
 
     assert [r.outcome for r in results] == [RewriteOutcome.UPDATED]
     text = (wiki_dir / "locked.md").read_text(encoding="utf-8")
-    assert "- Archive: [sources/2026/04/hl-l.md]" in text
+    assert "- Archive: [hl-l.md](sources/2026/04/hl-l.md)" in text
 
 
 def test_byte_diff_outside_sources_is_zero(tmp_path: Path) -> None:

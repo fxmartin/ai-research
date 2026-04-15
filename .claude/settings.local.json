@@ -17,7 +17,8 @@
       "Bash(uv add:*)",
       "Bash(git:*)",
       "Bash(gh pr:*)",
-      "Bash(~/.claude/hooks/cmux-bridge.sh clear:*)"
+      "Bash(~/.claude/hooks/cmux-bridge.sh clear:*)",
+      "Skill(ingest-inbox)"
     ]
   }
 }
