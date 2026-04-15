@@ -82,6 +82,36 @@ claude -p "/ask 'summarize the key claim'" --output-format json | jq
 
 Open `wiki/` in Obsidian to browse the graph.
 
+## Capturing sources — Obsidian Web Clipper
+
+The inbox lives **inside** the vault at `wiki/raw/` so that the [Obsidian Web Clipper](https://obsidian.md/clipper) (and any other Obsidian plugin or mobile-vault workflow that writes into the vault) can drop new sources straight into the ingest queue.
+
+### Setup
+
+1. Install Obsidian Web Clipper in your browser.
+2. Open its settings and set **Vault** to the Obsidian vault for this project (the `wiki/` directory).
+3. Under **Default folder** (or per-template), set the destination to `raw/` — relative to the vault root, so clippings land at `wiki/raw/`.
+4. Clip a page. It appears as `wiki/raw/<title>.md`.
+5. Drain the inbox:
+
+   ```bash
+   claude -p "/ingest-inbox"
+   ```
+
+Alternative capture paths — all land in the same inbox:
+
+```bash
+# Manual copy (any file: PDF, HTML, markdown, transcript)
+cp ~/Downloads/paper.pdf wiki/raw/
+
+# Drag-and-drop inside Obsidian (save into wiki/raw/)
+# Mobile Obsidian with sync → writes into wiki/raw/ too
+```
+
+`wiki/raw/` is excluded from `vault-lint` and `index-rebuild`, so inbox clippings never pollute the published graph until `/ingest-inbox` promotes them. Inbox contents are git-ignored (see `.gitignore`); only `wiki/raw/.gitkeep` is tracked.
+
+> **Migrating from an earlier checkout?** The inbox used to live at the repo-root `raw/`. If you have files there, move them: `mv raw/* wiki/raw/ && rmdir raw`. See [#27](https://github.com/fxmartin/ai-research/issues/27) for rationale.
+
 ## Invocation modes
 
 Everything works three equivalent ways:
