@@ -198,8 +198,8 @@
 **Technical Notes**: Use a read-only bind-mount or mtime snapshot in the test harness; cross-reference NFR-SEC-001.
 
 **Definition of Done**:
-- [ ] Read-only test passes in CI.
-- [ ] Threat-model section in README.
+- [x] Read-only test passes in CI.
+- [x] Threat-model section in README.
 
 **Dependencies**: All Feature 06.2 stories
 **Risk Level**: Medium
@@ -225,6 +225,6 @@
 - [ ] Story 06.2-003 (2 pts)
 - [x] Story 06.2-004 (3 pts)
 - [ ] Story 06.3-001 (1 pt)
-- [ ] Story 06.3-002 (2 pts)
+- [x] Story 06.3-002 (2 pts)
 
-**Completed**: 1 / 8 stories · 5 / 19 pts.
+**Completed**: 2 / 8 stories · 7 / 19 pts.

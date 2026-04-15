@@ -271,7 +271,7 @@ Full detail in [`docs/STORIES.md`](docs/STORIES.md) and [`REQUIREMENTS.md`](REQU
 
 - **MVP** (Epics 01–04): PDF + URL + markdown ingest, cross-linking, `/ask`, Obsidian-clean vault, idempotent re-ingest, CI.
 - **Phase 2** (Epic-05): YouTube transcripts, contradiction detection, `/status`, launchd agent template.
-- **Epic-06**: read-only MCP server for Claude Desktop.
+- **Epic-06**: read-only MCP server for Claude Desktop. See [`docs/mcp-threat-model.md`](docs/mcp-threat-model.md) for the read-only guarantee and threat model.
 
 ## License
 
