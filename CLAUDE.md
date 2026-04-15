@@ -54,10 +54,10 @@ v1 is **Claude Code-native**. No Anthropic SDK in the Python toolkit. All LLM wo
 ## Storage Layout
 
 ```
-raw/              # INBOX — drop new files here; drained to sources/
 sources/          # immutable archive (PDF, URL-snapshot, .md, transcript)
   <yyyy>/<mm>/<hash>-<slug>.<ext>
 wiki/             # Obsidian-compatible markdown pages (wikilinks + frontmatter)
+  raw/            # INBOX — drop new files here; drained to sources/ (Obsidian Web Clipper-compatible)
   concepts/       # stub pages for cross-referenced concepts
   _contradictions.md  # Phase 2: index of flagged contradictions
 .ai-research/
@@ -67,7 +67,7 @@ wiki/             # Obsidian-compatible markdown pages (wikilinks + frontmatter)
 .claude/
   commands/
     ingest.md        # /ingest <path-or-url>
-    ingest-inbox.md  # /ingest-inbox — batch-drain raw/
+    ingest-inbox.md  # /ingest-inbox — batch-drain wiki/raw/
     ask.md           # /ask "<question>" — JSON contract under claude -p
     status.md        # /status (P1)
 ```

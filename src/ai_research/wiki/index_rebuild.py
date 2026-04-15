@@ -85,8 +85,10 @@ def rebuild_index(*, wiki_dir: Path, index_path: Path) -> list[IndexEntry]:
         (
             p
             for p in wiki_dir.rglob("*.md")
-            # Skip dotfiles anywhere in the relative path (e.g. .obsidian/).
+            # Skip dotfiles anywhere in the relative path (e.g. .obsidian/)
+            # and the Obsidian Web Clipper inbox under wiki/raw/.
             if not any(part.startswith(".") for part in p.relative_to(wiki_dir).parts)
+            and not (p.relative_to(wiki_dir).parts and p.relative_to(wiki_dir).parts[0] == "raw")
         ),
         key=lambda p: p.relative_to(wiki_dir).as_posix(),
     )

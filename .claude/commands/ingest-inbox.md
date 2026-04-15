@@ -1,24 +1,24 @@
 ---
-description: Drain raw/ — scan for eligible files, ingest each one, rebuild the index once.
+description: Drain wiki/raw/ — scan for eligible files, ingest each one, rebuild the index once.
 argument-hint: (no arguments)
 allowed-tools: Bash, Read, Write, Edit, Grep, Glob
 ---
 
-# /ingest-inbox — batch drain of `raw/`
+# /ingest-inbox — batch drain of `wiki/raw/`
 
 You are the batch ingest driver for this research wiki. Your job is to drain the
-`raw/` inbox by composing the deterministic `ai-research` toolkit verbs with your
+`wiki/raw/` inbox by composing the deterministic `ai-research` toolkit verbs with your
 own drafting ability, ingesting **every eligible file in one Claude Code turn**.
 
 This command takes **no arguments**. If `$ARGUMENTS` is non-empty, ignore it.
 
 ## Contract
 
-- Every eligible file in `raw/` is ingested and archived to `sources/` via the
-  toolkit. After a successful pass `raw/` is empty (or contains only files too
+- Every eligible file in `wiki/raw/` is ingested and archived to `sources/` via the
+  toolkit. After a successful pass `wiki/raw/` is empty (or contains only files too
   new / already-known that were deliberately skipped).
 - **Idempotent**: already-ingested sources (hash in `.ai-research/state.json`)
-  are skipped silently via `scan --skip-known`. A second run on the same `raw/`
+  are skipped silently via `scan --skip-known`. A second run on the same `wiki/raw/`
   is a no-op.
 - Files with `mtime < 5s` are skipped and flagged for the next tick (handled by
   `scan`'s default `--min-age-seconds 5.0`).
@@ -27,7 +27,7 @@ This command takes **no arguments**. If `$ARGUMENTS` is non-empty, ignore it.
   signals a non-zero exit condition when any file failed.
 - `.ai-research/index.md` is rebuilt **exactly once** at the end of the batch,
   not per file.
-- When `raw/` is empty (or `scan` returns zero eligible files), report
+- When `wiki/raw/` is empty (or `scan` returns zero eligible files), report
   `nothing to ingest` and exit cleanly — do NOT error.
 
 ## Pipeline
@@ -37,7 +37,7 @@ This command takes **no arguments**. If `$ARGUMENTS` is non-empty, ignore it.
 Run:
 
 ```bash
-uv run ai-research scan raw/ --skip-known --json
+uv run ai-research scan wiki/raw/ --skip-known --json
 ```
 
 This returns a JSON array of absolute paths eligible for ingest: files old

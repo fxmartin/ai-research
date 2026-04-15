@@ -128,6 +128,28 @@ def test_lint_anchor_wikilink_resolves(tmp_path: Path) -> None:
     assert report.ok is True
 
 
+def test_lint_ignores_wiki_raw_inbox(tmp_path: Path) -> None:
+    """Obsidian Web Clipper clippings under wiki/raw/ must be excluded from lint.
+
+    Issue #27 — the inbox lives inside the vault for Obsidian visibility, but
+    raw clippings are ephemeral ingest inputs, not curated pages. They would
+    otherwise trip frontmatter/naming rules and pollute orphan counts.
+    """
+    wiki = _clean_vault(tmp_path)
+    # Drop a clipping that would fail naming + frontmatter + wikilink checks
+    # if the linter walked into wiki/raw/.
+    _write(
+        wiki / "raw" / "Bad Clip Name.md",
+        "---\ntitle: : broken yaml : [\n---\n\n[[nonexistent target]]\n",
+    )
+    report = lint_vault(wiki)
+    assert report.ok is True
+    assert report.issues == []
+    # Counts must match the clean-vault baseline — the clipping is invisible.
+    assert report.pages == 1
+    assert report.stubs == 2
+
+
 def test_lint_file_naming_violation(tmp_path: Path) -> None:
     wiki = tmp_path / "wiki"
     _write(wiki / "Bad Name.md", "---\ntitle: Bad\n---\nbody\n")

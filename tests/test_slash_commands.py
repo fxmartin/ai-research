@@ -293,8 +293,8 @@ class TestIngestCommand:
 class TestIngestInboxCommand:
     """Contract tests for ``.claude/commands/ingest-inbox.md`` (Story 03.2-001).
 
-    ``/ingest-inbox`` drains ``raw/`` by shelling out to
-    ``ai-research scan raw/ --skip-known`` then inlining the per-file ingest
+    ``/ingest-inbox`` drains ``wiki/raw/`` by shelling out to
+    ``ai-research scan wiki/raw/ --skip-known`` then inlining the per-file ingest
     pipeline (extract → draft → stub → materialize) in a single Claude Code
     turn, rebuilding the index exactly once at the end.
     """
@@ -334,12 +334,12 @@ class TestIngestInboxCommand:
     def test_body_invokes_scan_verb(self, parsed: tuple[dict[str, object], str]) -> None:
         _, body = parsed
         assert "ai-research scan" in body, (
-            "body must shell out to `ai-research scan raw/` to enumerate eligible files"
+            "body must shell out to `ai-research scan wiki/raw/` to enumerate eligible files"
         )
 
     def test_body_scans_raw_directory(self, parsed: tuple[dict[str, object], str]) -> None:
         _, body = parsed
-        assert "raw/" in body, "body must target the raw/ inbox directory"
+        assert "wiki/raw/" in body, "body must target the wiki/raw/ inbox directory"
 
     def test_body_loops_inline_not_via_slash_ingest(
         self, parsed: tuple[dict[str, object], str]
@@ -422,10 +422,10 @@ class TestIngestInboxCommand:
     def test_body_documents_empty_inbox_clean_exit(
         self, parsed: tuple[dict[str, object], str]
     ) -> None:
-        """Empty raw/ is a clean exit, not an error."""
+        """Empty wiki/raw/ is a clean exit, not an error."""
         _, body = parsed
         assert "nothing to ingest" in body, (
-            "body must document the `nothing to ingest` message for empty raw/"
+            "body must document the `nothing to ingest` message for empty wiki/raw/"
         )
 
     # ------------------------------------------------------------------
@@ -716,7 +716,7 @@ class TestLoopCompat:
     be a safe ``/loop`` target it must:
 
     1. Take **no required arguments** (the harness does not supply any).
-    2. Be **idempotent** — repeated ticks on an unchanged ``raw/`` must be no-ops.
+    2. Be **idempotent** — repeated ticks on an unchanged ``wiki/raw/`` must be no-ops.
     3. Have a **clean empty-inbox exit** — an empty tick must NOT signal error.
     4. Emit **structured status on stdout** so the loop harness (and a human
        watching) can tell at a glance what happened on each tick.
@@ -763,7 +763,7 @@ class TestLoopCompat:
         body = post.content
         assert "--skip-known" in body, (
             "`/loop`-driven /ingest-inbox must pass --skip-known so repeated "
-            "ticks on an unchanged raw/ are no-ops"
+            "ticks on an unchanged wiki/raw/ are no-ops"
         )
 
     def test_loop_compat_idempotency_contract_stated(self, post: frontmatter.Post) -> None:
@@ -778,7 +778,7 @@ class TestLoopCompat:
     # ------------------------------------------------------------------
 
     def test_loop_compat_empty_inbox_is_clean_exit(self, post: frontmatter.Post) -> None:
-        """Empty ``raw/`` must emit `nothing to ingest` and NOT error.
+        """Empty ``wiki/raw/`` must emit `nothing to ingest` and NOT error.
 
         Under `/loop`, a tick with nothing to do is the common case. Erroring
         would make the loop look chronically broken.
@@ -789,7 +789,7 @@ class TestLoopCompat:
             "empty ticks under /loop"
         )
         assert re.search(r"not.*error|clean exit|not a failure", body, re.IGNORECASE), (
-            "spec must state explicitly that empty raw/ is NOT an error"
+            "spec must state explicitly that empty wiki/raw/ is NOT an error"
         )
 
     # ------------------------------------------------------------------

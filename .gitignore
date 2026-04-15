@@ -34,3 +34,10 @@ htmlcov/
 .claude/*
 !.claude/commands/
 .ai-research/index.md
+
+# Obsidian Web Clipper inbox — ephemeral, not tracked
+wiki/raw/*
+!wiki/raw/.gitkeep
+
+# Obsidian vault config — user-local, not tracked
+wiki/.obsidian/

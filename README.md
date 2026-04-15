@@ -19,7 +19,7 @@ See [`REQUIREMENTS.md`](REQUIREMENTS.md) for the full PRD.
 Three layers on local disk:
 
 ```
-raw/       INBOX — drop new files here
+wiki/raw/  INBOX — drop new files here (Obsidian Web Clipper-compatible)
 sources/   immutable archive of ingested inputs
 wiki/      Obsidian-compatible markdown (wikilinks + frontmatter)
 ```
@@ -64,7 +64,7 @@ Basic usage flow: **ingest → materialize → query**.
 
 ```bash
 # 1. Drop a paper into the inbox
-cp ~/Downloads/some-paper.pdf raw/
+cp ~/Downloads/some-paper.pdf wiki/raw/
 
 # 2. Ingest (interactive — /ingest-inbox runs extract → LLM draft → materialize)
 claude                   # opens interactive Claude Code session
@@ -99,7 +99,7 @@ The product surface lives in `.claude/commands/`:
 | Command | Purpose |
 |---------|---------|
 | `/ingest <path-or-url>` | Ingest one source → wiki page with `[[wikilinks]]` + concept stubs |
-| `/ingest-inbox` | Drain `raw/` — ingest every eligible file, move raw→sources, rebuild index. Loop-safe |
+| `/ingest-inbox` | Drain `wiki/raw/` — ingest every eligible file, move raw→sources, rebuild index. Loop-safe |
 | `/ask "<question>"` | Q&A over the wiki with citations. Returns `{answer, citations[], confidence}` JSON under `--output-format json` |
 
 ## Python toolkit verbs
@@ -109,10 +109,10 @@ The `ai-research` CLI is a deterministic, LLM-free file-ops toolkit. Slash comma
 | Verb | Purpose | Example |
 |------|---------|---------|
 | `extract` | Extract text + metadata from PDF, URL, or markdown | `ai-research extract ./paper.pdf --json` |
-| `archive` | Move an ingested source from `raw/` into the immutable `sources/<yyyy>/<mm>/` archive | `ai-research archive raw/paper.pdf` |
+| `archive` | Move an ingested source from `wiki/raw/` into the immutable `sources/<yyyy>/<mm>/` archive | `ai-research archive wiki/raw/paper.pdf` |
 | `materialize` | Atomically write a wiki page from a draft + archive its source | `ai-research materialize --source sources/2026/04/abc-paper.pdf --from draft.md` |
 | `index-rebuild` | Regenerate `.ai-research/index.md` retrieval surface from `wiki/` | `ai-research index-rebuild` |
-| `scan` | List files in `raw/` eligible for ingest (skips too-fresh partials) | `ai-research scan raw/ --json` |
+| `scan` | List files in `wiki/raw/` eligible for ingest (skips too-fresh partials) | `ai-research scan wiki/raw/ --json` |
 | `search` | `rg` over `wiki/` with structured JSON hits | `ai-research search "sparse attention" --json` |
 | `vault-lint` | Obsidian smoke test — all wikilinks resolve, frontmatter parses | `ai-research vault-lint` |
 | `ask-check` | Validate that `[[page-name]]` citations in an answer resolve to real pages | `ai-research ask-check answer.json` |
@@ -131,7 +131,7 @@ Embeddings and graph-walk expansion are Phase-2.
 ## `/loop` compatibility smoke test
 
 `/ingest-inbox` is designed to be driven by Claude Code's `/loop` harness at a
-fixed interval, so a session can drain `raw/` itself. Use this manual
+fixed interval, so a session can drain `wiki/raw/` itself. Use this manual
 checklist after any change to `.claude/commands/ingest-inbox.md` or a verb it
 composes.
 
@@ -143,9 +143,9 @@ Invocation:
 
 Checklist (interactive `claude` session inside the repo):
 
-- [ ] **Empty-inbox tick is clean.** With `raw/` empty, one tick reports
+- [ ] **Empty-inbox tick is clean.** With `wiki/raw/` empty, one tick reports
       `nothing to ingest` and does NOT mark the loop as failed.
-- [ ] **Drop-and-drain.** Copy a PDF into `raw/`. Within the interval, the
+- [ ] **Drop-and-drain.** Copy a PDF into `wiki/raw/`. Within the interval, the
       file appears under `sources/<yyyy>/<mm>/…` and a page in `wiki/`.
 - [ ] **Idempotent repeat.** Next tick reports `nothing to ingest` (no
       duplicates — `--skip-known` is working).
@@ -187,7 +187,7 @@ See [`CLAUDE.md`](CLAUDE.md) for the testing strategy and story-management proto
 
 **Obsidian shows broken links** — run `ai-research vault-lint`, then `ai-research index-rebuild`.
 
-**`raw/` isn't draining** — confirm Claude Code is running (interactive or via launchd/`claude -p`). Files younger than 5 seconds are skipped by design.
+**`wiki/raw/` isn't draining** — confirm Claude Code is running (interactive or via launchd/`claude -p`). Files younger than 5 seconds are skipped by design.
 
 ## Privacy
 

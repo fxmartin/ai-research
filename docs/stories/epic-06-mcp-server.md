@@ -186,7 +186,7 @@
 ---
 
 ##### Story 06.3-002: Read-only guarantee — test + documented threat model
-**User Story**: As FX, I want a test that asserts NO tool can write anywhere under `wiki/`, `sources/`, `raw/`, or `.ai-research/`, and a short threat-model note in the README, so "read-only" is a guarantee, not a habit.
+**User Story**: As FX, I want a test that asserts NO tool can write anywhere under `wiki/`, `sources/`, `wiki/raw/`, or `.ai-research/`, and a short threat-model note in the README, so "read-only" is a guarantee, not a habit.
 **Priority**: Should Have
 **Story Points**: 2
 

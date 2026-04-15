@@ -2,13 +2,13 @@
 
 ## Epic Overview
 **Epic ID**: Epic-05
-**Description**: Post-MVP depth: YouTube transcript ingestion, contradiction detection across the vault, `/status` slash command with vault stats, and a launchd agent template for background `/ingest-inbox` so `raw/` drains without an open Claude Code session.
+**Description**: Post-MVP depth: YouTube transcript ingestion, contradiction detection across the vault, `/status` slash command with vault stats, and a launchd agent template for background `/ingest-inbox` so `wiki/raw/` drains without an open Claude Code session.
 **Business Value**: MVP validates the premise. This epic makes ai-research a durable daily tool — more source types, proactive quality signals, and hands-off operation.
 **Success Metrics**:
 - YouTube videos ingest as cleanly as PDFs.
 - Contradictions surface automatically; `_contradictions.md` has non-zero useful entries after 10+ sources.
 - `/status` renders usable vault health in < 2s.
-- Launchd agent drains `raw/` overnight.
+- Launchd agent drains `wiki/raw/` overnight.
 
 ## Epic Scope
 **Total Stories**: 6 | **Total Points**: 17 | **MVP Stories**: 0
@@ -134,7 +134,7 @@
 ---
 
 ##### Story 05.3-002: launchd agent template for background `/ingest-inbox`
-**User Story**: As FX, I want a documented launchd agent that runs `claude -p "/ingest-inbox"` on a schedule (e.g. every 20 min) so `raw/` drains without me opening Claude Code.
+**User Story**: As FX, I want a documented launchd agent that runs `claude -p "/ingest-inbox"` on a schedule (e.g. every 20 min) so `wiki/raw/` drains without me opening Claude Code.
 **Priority**: Could Have
 **Story Points**: 1
 

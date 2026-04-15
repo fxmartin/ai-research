@@ -1,4 +1,4 @@
-"""Scan a raw/ inbox directory for files eligible for ingest.
+"""Scan a wiki/raw/ inbox directory for files eligible for ingest.
 
 Zero LLM calls. Deterministic file-ops verb used by ``/ingest-inbox`` to iterate
 safely: files that were modified less than ``min_age_seconds`` ago are skipped

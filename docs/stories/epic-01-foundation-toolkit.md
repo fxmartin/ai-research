@@ -7,7 +7,7 @@
 **Success Metrics**:
 - `uv run ai-research --help` lists all verbs.
 - Each `extract` adapter returns `{text, metadata}` for its format.
-- `scan raw/` and `search "<q>"` work against fixture data.
+- `scan wiki/raw/` and `search "<q>"` work against fixture data.
 
 ## Epic Scope
 **Total Stories**: 9 | **Total Points**: 19 | **MVP Stories**: 9
@@ -154,13 +154,13 @@
 
 #### Stories
 
-##### Story 01.3-001: `scan raw/` lists files eligible for ingest
-**User Story**: As FX, I want `ai-research scan raw/` to list files that need ingestion (skipping too-fresh partial writes) so that `/ingest-inbox` can iterate safely.
+##### Story 01.3-001: `scan wiki/raw/` lists files eligible for ingest
+**User Story**: As FX, I want `ai-research scan wiki/raw/` to list files that need ingestion (skipping too-fresh partial writes) so that `/ingest-inbox` can iterate safely.
 **Priority**: Must Have
 **Story Points**: 2
 
 **Acceptance Criteria**:
-- **Given** files in `raw/` older than 5 seconds **When** I run `scan` **Then** their paths print one per line (or JSON with `--json`).
+- **Given** files in `wiki/raw/` older than 5 seconds **When** I run `scan` **Then** their paths print one per line (or JSON with `--json`).
 - **Given** a file with mtime < 5s **When** I run `scan` **Then** it is excluded.
 - **Given** a file whose `sha256` already exists in `state.json` **When** I run `scan --skip-known` **Then** it is excluded.
 

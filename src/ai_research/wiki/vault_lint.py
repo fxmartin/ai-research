@@ -127,7 +127,13 @@ def lint_vault(wiki_dir: Path) -> LintReport:
     if not wiki_dir.is_dir():
         raise FileNotFoundError(f"wiki_dir does not exist: {wiki_dir}")
 
-    md_files = sorted(p for p in wiki_dir.rglob("*.md"))
+    md_files = sorted(
+        p
+        for p in wiki_dir.rglob("*.md")
+        # Skip the Obsidian Web Clipper inbox — wiki/raw/ holds ephemeral
+        # clippings awaiting ingest, not curated wiki pages.
+        if not (p.relative_to(wiki_dir).parts and p.relative_to(wiki_dir).parts[0] == "raw")
+    )
 
     page_paths: list[Path] = []
     stub_paths: list[Path] = []
