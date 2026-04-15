@@ -221,7 +221,7 @@
 - [ ] Story 06.1-001 (2 pts)
 - [x] Story 06.1-002 (2 pts)
 - [ ] Story 06.2-001 (5 pts)
-- [ ] Story 06.2-002 (2 pts)
+- [x] Story 06.2-002 (2 pts)
 - [ ] Story 06.2-003 (2 pts)
 - [ ] Story 06.2-004 (3 pts)
 - [ ] Story 06.3-001 (1 pt)
