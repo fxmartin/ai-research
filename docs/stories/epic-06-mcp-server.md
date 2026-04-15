@@ -143,7 +143,7 @@
 **Technical Notes**: Path-traversal check is critical — read-only status does not protect you from reading `~/.ssh/config` if slug joining is naive. Enforce slug regex `^[a-z0-9][a-z0-9-/]*$` and that the resolved path is within `wiki/`.
 
 **Definition of Done**:
-- [ ] Tool + unit tests including path-traversal attempts.
+- [x] Tool + unit tests including path-traversal attempts.
 
 **Dependencies**: 06.1-002
 **Risk Level**: Medium — path traversal is the one place read-only can still leak data.
@@ -223,7 +223,7 @@
 - [ ] Story 06.2-001 (5 pts)
 - [x] Story 06.2-002 (2 pts)
 - [ ] Story 06.2-003 (2 pts)
-- [ ] Story 06.2-004 (3 pts)
+- [x] Story 06.2-004 (3 pts)
 - [ ] Story 06.3-001 (1 pt)
 - [ ] Story 06.3-002 (2 pts)
 
