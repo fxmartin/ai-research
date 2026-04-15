@@ -36,6 +36,7 @@ from ai_research.wiki.ask import AskPayloadError, check_citations
 from ai_research.wiki.index_rebuild import rebuild_index as rebuild_index_impl
 from ai_research.wiki.materialize import MaterializeStatus
 from ai_research.wiki.materialize import materialize as materialize_page
+from ai_research.wiki.sources_rewrite import RewriteOutcome, rewrite_sources
 from ai_research.wiki.stubs import create_stub
 from ai_research.wiki.vault_lint import lint_vault
 
@@ -470,6 +471,75 @@ def source_lookup(
         return
 
     typer.echo(result.archive_path)
+
+
+sources_app = typer.Typer(
+    name="sources",
+    help="Bulk operations over wiki ## Sources sections.",
+    no_args_is_help=True,
+)
+app.add_typer(sources_app, name="sources")
+
+
+@sources_app.command("rewrite")
+def sources_rewrite(
+    wiki_dir: Path = typer.Option(  # noqa: B008
+        Path("wiki"),
+        "--wiki-dir",
+        help="Root of the wiki vault to walk.",
+    ),
+    state_file: Path = typer.Option(  # noqa: B008
+        Path(".ai-research/state.json"),
+        "--state-file",
+        help="Path to state.json supplying archive_path backfill data.",
+    ),
+    index_file: Path = typer.Option(  # noqa: B008
+        Path(".ai-research/index.md"),
+        "--index-file",
+        help="Path to the retrieval index; rebuilt once if any page was updated.",
+    ),
+    dry_run: bool = typer.Option(  # noqa: B008
+        False,
+        "--dry-run",
+        help="List files that would change without writing.",
+    ),
+    force: bool = typer.Option(  # noqa: B008
+        False,
+        "--force",
+        help="Rewrite locked pages as well (default: skip locked).",
+    ),
+) -> None:
+    """Retroactively backfill ``- Archive:`` bullets into existing pages.
+
+    For every ``wiki/*.md`` (top-level), look up each source's ``archive_path``
+    in state.json and augment the ``## Sources`` section accordingly. Pages
+    with nothing to backfill remain byte-identical. Locked pages are skipped
+    unless ``--force`` is passed.
+    """
+    try:
+        results = rewrite_sources(
+            wiki_dir=wiki_dir,
+            state_path=state_file,
+            dry_run=dry_run,
+            force=force,
+        )
+    except FileNotFoundError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=2) from exc
+
+    updated = [r for r in results if r.outcome is RewriteOutcome.UPDATED]
+    locked = [r for r in results if r.outcome is RewriteOutcome.LOCKED]
+
+    for r in results:
+        prefix = "DRY-RUN " if dry_run and r.outcome is RewriteOutcome.UPDATED else ""
+        typer.echo(f"{prefix}{r.outcome.value.upper()}: {r.page_path}")
+
+    if locked:
+        typer.echo(f"note: {len(locked)} locked page(s) skipped; pass --force to rewrite.")
+
+    if updated and not dry_run:
+        rebuild_index_impl(wiki_dir=wiki_dir, index_path=index_file)
+        typer.echo(f"index rebuilt -> {index_file}")
 
 
 if __name__ == "__main__":  # pragma: no cover
