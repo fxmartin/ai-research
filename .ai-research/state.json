@@ -1,5 +1,11 @@
 {
   "pages": {
+    "wiki/ai-2027.md": [
+      "acf15245c7f29d221ef3969be1cb75c6c0f7fae00a43e32d84c830122a075ba5"
+    ],
+    "wiki/anthropic-research-team-landing-page.md": [
+      "7901ab18527b46162650b8df36a53513bae55a2b88c7af71995ddc3ec35ff8c3"
+    ],
     "wiki/anthropic-s-project-glasswing-restricting-claude-mythos-to-security-researchers.md": [
       "48b877f1aa1a06fa60b0ec7159ceac5bb3d5de775863e5efb1136add8e65b933"
     ],
@@ -30,6 +36,9 @@
     "wiki/introducing-sonnet-4-6.md": [
       "0af76ce9e49a8735975655f0ef47295828b0156e9d8d30e8176afbc50c9b7cc2"
     ],
+    "wiki/labor-market-impacts-of-ai-a-new-measure-and-early-evidence.md": [
+      "48c941dbdc1053456ec72f893c6a27630559507d3882895bb036d034b6972450"
+    ],
     "wiki/something-big-is-happening.md": [
       "6477da70d562b739c5495c44272de34b9759089078f7d3b4fd6ee418107d3faa"
     ],
@@ -38,6 +47,9 @@
     ],
     "wiki/understanding-large-language-models.md": [
       "84139e72521584a892b185cfa555445c1cd1d5a5bbb4dc448325aaf8713a52dc"
+    ],
+    "wiki/what-81-000-people-want-from-ai.md": [
+      "4a27c3dab8648bf7463cc02057ce233e899c0d6aea93216cd61e8844ac4b9888"
     ]
   },
   "sources": {
@@ -57,6 +69,14 @@
       "archive_path": "sources/2026/04/48b877f1aa1a-anthropics-project-glasswingrestricting-claude-mythos-to-security-researcherssou.md",
       "page": "wiki/anthropic-s-project-glasswing-restricting-claude-mythos-to-security-researchers.md"
     },
+    "48c941dbdc1053456ec72f893c6a27630559507d3882895bb036d034b6972450": {
+      "archive_path": "sources/2026/04/48c941dbdc10-labor-market-impacts-of-ai-a-new-measure-and-early-evidence.pdf",
+      "page": "wiki/labor-market-impacts-of-ai-a-new-measure-and-early-evidence.md"
+    },
+    "4a27c3dab8648bf7463cc02057ce233e899c0d6aea93216cd61e8844ac4b9888": {
+      "archive_path": "sources/2026/04/4a27c3dab864-what-81-000-people-want-from-ai.md",
+      "page": "wiki/what-81-000-people-want-from-ai.md"
+    },
     "4db67c6b6aea0a87e7f8a784b83fc05a0f1a61a3e87615fe7956e3486b951b3c": {
       "archive_path": "sources/2026/04/4db67c6b6aea-claude-opus-4-6-system-card.pdf",
       "page": "wiki/claude-opus-4-6-system-card.md"
@@ -69,6 +89,10 @@
       "archive_path": "sources/2026/04/672339ab327e-claude-sonnet-4-6-system-card.pdf",
       "page": "wiki/claude-sonnet-4-6-system-card.md"
     },
+    "7901ab18527b46162650b8df36a53513bae55a2b88c7af71995ddc3ec35ff8c3": {
+      "archive_path": "sources/2026/04/7901ab18527b-anthropic-research-team-landing-page.md",
+      "page": "wiki/anthropic-research-team-landing-page.md"
+    },
     "84139e72521584a892b185cfa555445c1cd1d5a5bbb4dc448325aaf8713a52dc": {
       "archive_path": "sources/2026/04/84139e725215-understanding-large-language-models.md",
       "page": "wiki/understanding-large-language-models.md"
@@ -80,6 +104,10 @@
     "9fb8cad79a7177c39c6fbbe82ac5bca6f7731497be25973031b4f8d628521bff": {
       "archive_path": "sources/2026/04/9fb8cad79a71-dario-amodei-the-adolescence-of-technology.md",
       "page": "wiki/dario-amodei-the-adolescence-of-technology.md"
+    },
+    "acf15245c7f29d221ef3969be1cb75c6c0f7fae00a43e32d84c830122a075ba5": {
+      "archive_path": "sources/2026/04/acf15245c7f2-ai-2027.md",
+      "page": "wiki/ai-2027.md"
     },
     "b02bb412e14cc90da7549c81170e8484b51c62131523ad0e31c05d270db4687b": {
       "archive_path": "sources/2026/04/b02bb412e14c-dario-amodei.md",
