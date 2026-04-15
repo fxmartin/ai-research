@@ -39,6 +39,7 @@ def test_materialize_writes_page_with_frontmatter(tmp_path: Path) -> None:
         wiki_dir=wiki_dir,
         state_path=state_path,
         now=FIXED_NOW,
+        no_archive=True,
     )
 
     assert isinstance(result, MaterializeResult)
@@ -70,6 +71,7 @@ def test_materialize_updates_state_mapping(tmp_path: Path) -> None:
         wiki_dir=wiki_dir,
         state_path=state_path,
         now=FIXED_NOW,
+        no_archive=True,
     )
 
     state = load_state(state_path)
@@ -92,6 +94,7 @@ def test_materialize_reads_stdin_when_draft_is_none(tmp_path: Path) -> None:
         state_path=state_path,
         now=FIXED_NOW,
         stdin=stdin,
+        no_archive=True,
     )
 
     page_path = wiki_dir / "from-stdin.md"
@@ -114,6 +117,7 @@ def test_materialize_slug_falls_back_to_source_stem_when_no_title(tmp_path: Path
         wiki_dir=wiki_dir,
         state_path=state_path,
         now=FIXED_NOW,
+        no_archive=True,
     )
 
     assert result.page_path == wiki_dir / "my-paper.md"
@@ -139,6 +143,7 @@ def test_materialize_crash_mid_write_leaves_no_partial_file(tmp_path: Path) -> N
                 wiki_dir=wiki_dir,
                 state_path=state_path,
                 now=FIXED_NOW,
+                no_archive=True,
             )
 
     assert not (wiki_dir / "title.md").exists()
@@ -158,6 +163,7 @@ def test_materialize_stdin_requires_stream(tmp_path: Path) -> None:
             state_path=state_path,
             now=FIXED_NOW,
             stdin=None,
+            no_archive=True,
         )
 
 
@@ -171,6 +177,7 @@ def test_materialize_missing_source_raises(tmp_path: Path) -> None:
             wiki_dir=tmp_path / "wiki",
             state_path=tmp_path / "state.json",
             now=FIXED_NOW,
+            no_archive=True,
         )
 
 
@@ -191,6 +198,7 @@ def test_materialize_preserves_existing_frontmatter_in_draft(tmp_path: Path) -> 
         wiki_dir=wiki_dir,
         state_path=state_path,
         now=FIXED_NOW,
+        no_archive=True,
     )
 
     post = frontmatter.loads(result.page_path.read_text(encoding="utf-8"))
@@ -217,6 +225,7 @@ def test_materialize_cli_command(tmp_path: Path) -> None:
         app,
         [
             "materialize",
+            "--no-archive",
             "--source",
             str(source),
             "--from",
@@ -246,6 +255,7 @@ def test_materialize_cli_stdin(tmp_path: Path) -> None:
         app,
         [
             "materialize",
+            "--no-archive",
             "--source",
             str(source),
             "--stdin",
@@ -271,6 +281,7 @@ def test_materialize_cli_requires_from_or_stdin(tmp_path: Path) -> None:
         app,
         [
             "materialize",
+            "--no-archive",
             "--source",
             str(source),
             "--wiki-dir",
@@ -293,6 +304,7 @@ def test_materialize_cli_missing_source(tmp_path: Path) -> None:
         app,
         [
             "materialize",
+            "--no-archive",
             "--source",
             str(tmp_path / "nope.md"),
             "--from",
@@ -316,6 +328,7 @@ def test_materialize_re_records_same_hash_without_duplicating(tmp_path: Path) ->
         wiki_dir=wiki_dir,
         state_path=state_path,
         now=FIXED_NOW,
+        no_archive=True,
     )
     r2 = materialize(
         source=source,
@@ -323,6 +336,7 @@ def test_materialize_re_records_same_hash_without_duplicating(tmp_path: Path) ->
         wiki_dir=wiki_dir,
         state_path=state_path,
         now=FIXED_NOW,
+        no_archive=True,
     )
     assert r1.source_hash == r2.source_hash
     state = load_state(state_path)
@@ -347,6 +361,7 @@ def test_materialize_page_outside_state_root_falls_back_to_absolute(tmp_path: Pa
         wiki_dir=wiki_dir,
         state_path=state_path,
         now=FIXED_NOW,
+        no_archive=True,
     )
     state = load_state(state_path)
     # Expect an absolute path string (fallback branch).
@@ -380,6 +395,7 @@ def test_materialize_payload_already_newline_terminated(tmp_path: Path) -> None:
             wiki_dir=wiki_dir,
             state_path=state_path,
             now=FIXED_NOW,
+            no_archive=True,
         )
     content = result.page_path.read_bytes()
     assert content.endswith(b"\n")
@@ -400,6 +416,7 @@ def test_materialize_writes_sources_section(tmp_path: Path) -> None:
         wiki_dir=wiki_dir,
         state_path=state_path,
         now=FIXED_NOW,
+        no_archive=True,
     )
     text = result.page_path.read_text(encoding="utf-8")
     assert "## Sources" in text
@@ -421,6 +438,7 @@ def test_materialize_rematerialize_same_source_is_idempotent(tmp_path: Path) -> 
         wiki_dir=wiki_dir,
         state_path=state_path,
         now=FIXED_NOW,
+        no_archive=True,
     )
     r2 = materialize(
         source=source,
@@ -428,6 +446,7 @@ def test_materialize_rematerialize_same_source_is_idempotent(tmp_path: Path) -> 
         wiki_dir=wiki_dir,
         state_path=state_path,
         now=FIXED_NOW,
+        no_archive=True,
     )
     text = r2.page_path.read_text(encoding="utf-8")
     assert text.count("- [Page](sources/paper.md)") == 1
@@ -448,6 +467,7 @@ def test_materialize_appends_new_source_to_existing_page(tmp_path: Path) -> None
         wiki_dir=wiki_dir,
         state_path=state_path,
         now=FIXED_NOW,
+        no_archive=True,
     )
 
     # Different source file with the same resulting title (so same page slug).
@@ -459,6 +479,7 @@ def test_materialize_appends_new_source_to_existing_page(tmp_path: Path) -> None
         wiki_dir=wiki_dir,
         state_path=state_path,
         now=FIXED_NOW,
+        no_archive=True,
     )
     text = r2.page_path.read_text(encoding="utf-8")
     assert "sources/paper.md" in text
@@ -482,6 +503,7 @@ def test_materialize_url_source_records_original_url(tmp_path: Path) -> None:
         state_path=state_path,
         now=FIXED_NOW,
         source_url=url,
+        no_archive=True,
     )
     text = result.page_path.read_text(encoding="utf-8")
     assert "## Sources" in text
@@ -505,6 +527,7 @@ def test_materialize_cli_passes_source_url(tmp_path: Path) -> None:
         app,
         [
             "materialize",
+            "--no-archive",
             "--source",
             str(source),
             "--from",
@@ -541,6 +564,7 @@ def test_materialize_appends_to_existing_state(tmp_path: Path) -> None:
         wiki_dir=wiki_dir,
         state_path=state_path,
         now=FIXED_NOW,
+        no_archive=True,
     )
 
     state = load_state(state_path)

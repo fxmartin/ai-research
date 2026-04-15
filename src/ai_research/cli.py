@@ -213,6 +213,14 @@ def materialize(
         "--skip-index",
         help="Do not auto-rebuild the index (use for bulk runs; rebuild once at the end).",
     ),
+    no_archive: bool = typer.Option(  # noqa: B008
+        False,
+        "--no-archive",
+        help=(
+            "Skip moving the source into sources/<yyyy>/<mm>/<hash>-<slug>.<ext>. "
+            "Use when the source is already archived or managed externally."
+        ),
+    ),
     stubs: list[str] = typer.Option(  # noqa: B008
         [],
         "--stub",
@@ -254,6 +262,7 @@ def materialize(
             force=force,
             index_path=index_file,
             skip_index=skip_index,
+            no_archive=no_archive,
         )
     except FileNotFoundError as exc:
         typer.echo(str(exc), err=True)
