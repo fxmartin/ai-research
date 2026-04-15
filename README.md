@@ -150,6 +150,45 @@ The `ai-research` CLI is a deterministic, LLM-free file-ops toolkit. Slash comma
 
 All verbs support `--json` for stdout, exit non-zero on failure, and perform zero LLM calls.
 
+## MCP server for Claude Desktop
+
+`uv tool install .` exposes two console scripts on your `PATH`: the `ai-research` CLI and `ai-research-mcp`, a **read-only** [Model Context Protocol](https://modelcontextprotocol.io) server that speaks stdio. Claude Desktop (and any MCP-aware client) can spawn it as a subprocess to query the wiki directly from chat.
+
+### Available tools
+
+| Tool | Purpose |
+|------|---------|
+| `ask` | Answer a question from the wiki with `[[page-name]]` citations |
+| `search` | Lexical `rg` search over `wiki/` — structured hits |
+| `list_pages` | Enumerate wiki pages with title, tags, and 1-line summary |
+| `get_page` | Fetch the full markdown of a single page by slug |
+
+All four tools are read-only — the server cannot mutate the vault. Ingestion and edits stay in Claude Code + the CLI.
+
+### Claude Desktop setup (≈60 seconds)
+
+1. `uv tool install .` from the repo so `ai-research-mcp` is on your `PATH`.
+2. Open `~/Library/Application Support/Claude/claude_desktop_config.json` (create the file if missing) and merge in:
+
+   ```json
+   {
+     "mcpServers": {
+       "ai-research": {
+         "command": "ai-research-mcp",
+         "env": {
+           "AI_RESEARCH_ROOT": "/absolute/path/to/your/ai-research/repo"
+         }
+       }
+     }
+   }
+   ```
+
+3. Restart Claude Desktop. The four tools above should appear in the tool picker.
+
+`AI_RESEARCH_ROOT` is an absolute path to the repo root (the directory containing `wiki/` and `.ai-research/`). Set it explicitly — Claude Desktop does not inherit a useful `cwd`.
+
+For troubleshooting, env-var reference, and how to confirm the server is wired up, see [`docs/mcp-setup.md`](docs/mcp-setup.md). Full design: [Epic-06](docs/stories/epic-06-mcp-server.md).
+
 ## Retrieval mechanism (`/ask`)
 
 Two stages, no vector DB in v1:
