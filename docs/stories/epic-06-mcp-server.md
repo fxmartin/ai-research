@@ -177,7 +177,7 @@
 ```
 
 **Definition of Done**:
-- [ ] README updated.
+- [x] README updated.
 - [ ] One successful manual end-to-end test with Claude Desktop.
 
 **Dependencies**: 06.1-001, 06.2-001..004
