@@ -123,6 +123,30 @@ def _rewrite_page_body(
     entries = _parse_bullets(bullet_lines)
     augmented = [_augment_entry_with_archive(e, state, page_hashes) for e in entries]
 
+    # Issue #44: when the ## Sources section is empty but state.pages[<page>]
+    # identifies exactly one source hash with a known archive_path, seed a
+    # fresh Archive bullet. Guard with the same "exactly one archived source"
+    # invariant as the single-source attribution heuristic in
+    # _augment_entry_with_archive — never seed when ambiguous.
+    if not augmented:
+        archived_records = [
+            state.sources[h]
+            for h in page_hashes
+            if h in state.sources and state.sources[h].archive_path
+        ]
+        if len(archived_records) == 1:
+            record = archived_records[0]
+            archive_path = record.archive_path
+            assert archive_path is not None  # guarded by the list comp above
+            augmented = [
+                SourceEntry(
+                    title=Path(archive_path).name,
+                    path=archive_path,
+                    url=None,
+                    archive_path=archive_path,
+                )
+            ]
+
     rebuilt = render_sources_section(augmented)
     above_trimmed = above.rstrip("\n")
     if above_trimmed:
