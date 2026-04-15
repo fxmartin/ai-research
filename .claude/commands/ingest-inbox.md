@@ -14,17 +14,22 @@ This command takes **no arguments**. If `$ARGUMENTS` is non-empty, ignore it.
 
 ## Contract
 
-- Every eligible file in `wiki/raw/` is ingested and archived to `sources/` via the
-  toolkit. After a successful pass `wiki/raw/` is empty (or contains only files too
-  new / already-known that were deliberately skipped).
+- Every eligible file in `wiki/raw/` is ingested and, on success, **moved** out
+  of the inbox and archived to `sources/<yyyy>/<mm>/<hash>-<slug>.<ext>` by the
+  `materialize` verb (archive-on-ingest, Epic-07.1-002). After a successful pass
+  `wiki/raw/` is empty, or contains only files too new / already-known that were
+  deliberately skipped, **plus any files whose extract/materialize failed** —
+  those stay in `wiki/raw/` for retry on the next tick.
 - **Idempotent**: already-ingested sources (hash in `.ai-research/state.json`)
   are skipped silently via `scan --skip-known`. A second run on the same `wiki/raw/`
   is a no-op.
 - Files with `mtime < 5s` are skipped and flagged for the next tick (handled by
   `scan`'s default `--min-age-seconds 5.0`).
 - Per-file failures are reported but do not abort the batch; successful files
-  are still materialized. In headless mode (`claude -p`) the final summary
-  signals a non-zero exit condition when any file failed.
+  are still materialized and archived. **Failed files are NOT archived** — they
+  remain in `wiki/raw/` so the next `/ingest-inbox` tick can retry them. In
+  headless mode (`claude -p`) the final summary signals a non-zero exit
+  condition when any file failed.
 - `.ai-research/index.md` is rebuilt **exactly once** at the end of the batch,
   not per file.
 - When `wiki/raw/` is empty (or `scan` returns zero eligible files), report
@@ -102,6 +107,7 @@ Emit a single structured summary block so both humans and headless callers
 scanned:   <N> files
 ingested:  <K> ok, <F> failed
 pages:     wiki/<slug-1>.md, wiki/<slug-2>.md
+archived:  sources/<yyyy>/<mm>/<hash>-<slug-1>.<ext>, sources/<yyyy>/<mm>/<hash>-<slug-2>.<ext>
 stubs:     wiki/concepts/<a>.md, wiki/concepts/<b>.md
 failures:  <path-1>: <error>
            <path-2>: <error>
