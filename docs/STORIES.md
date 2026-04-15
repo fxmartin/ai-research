@@ -32,6 +32,8 @@
 | Epic-04 | Quality, Obsidian Compat & Docs | Golden tests, vault lint, README; shippable v1. | 5 | 11 | MVP (P0) |
 | Epic-05 | Phase 2 — YouTube, Contradictions, Ops | Post-MVP depth: transcripts, contradiction detection, status, background watcher. | 6 | 17 | P1 |
 | Epic-06 | MCP Server for Claude Desktop | Read-only MCP tools (`ask`, `search`, `list_pages`, `get_page`) so Claude Desktop can query the vault over stdio. | 8 | 19 | P1 |
+| Epic-07 | Archive-After-Ingest | Drain `wiki/raw/` to `sources/` on materialize; state.json tracks archive path. | 6 | 15 | P1 |
+| Epic-08 | Dual Source Links | `## Sources` renders both URL and local archive path; retroactive rewrite verb. | 4 | 11 | P1 |
 | NFR | Non-Functional Requirements | Performance, privacy, reliability, scriptability envelopes. | 5 | 8 | MVP / P1 |
 
 ---
@@ -44,6 +46,8 @@
 - **[Epic-04: Quality, Obsidian Compat & Docs](./stories/epic-04-quality-docs.md)** — golden tests, Obsidian lint, CI, README.
 - **[Epic-05: Phase 2 — YouTube, Contradictions, Ops](./stories/epic-05-phase-2.md)** — YouTube ingest, contradiction detection, `/status`, launchd template.
 - **[Epic-06: MCP Server for Claude Desktop](./stories/epic-06-mcp-server.md)** — read-only MCP stdio server exposing `ask`, `search`, `list_pages`, `get_page`.
+- **[Epic-07: Archive-After-Ingest](./stories/epic-07-archive-after-ingest.md)** — wire `archive_source` into `materialize`; extend `state.json` with archive path; update `/ingest` + `/ingest-inbox` contracts.
+- **[Epic-08: Dual Source Links](./stories/epic-08-dual-source-links.md)** — `## Sources` emits both URL and archive bullets; retroactive `sources rewrite` verb backfills existing pages.
 - **[Non-Functional Requirements](./stories/non-functional-requirements.md)** — performance, privacy, reliability, portability, scriptability.
 
 ---

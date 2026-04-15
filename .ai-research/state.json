@@ -15,6 +15,9 @@
     "wiki/claude-sonnet-4-6-system-card.md": [
       "672339ab327e8798578b3559e8489561db5ad25e81b427de4e306393108e90b6"
     ],
+    "wiki/components-of-a-coding-agent.md": [
+      "bed829db41afcc5836d2d33b967ec23742c9807dd6cb5880f2f819fe12fa31aa"
+    ],
     "wiki/dario-amodei-machines-of-loving-grace.md": [
       "fe2b9f7bd693d0239aa105e6c241c0569f67ddb55867e95384717928257a4de2"
     ],
@@ -29,6 +32,12 @@
     ],
     "wiki/something-big-is-happening.md": [
       "6477da70d562b739c5495c44272de34b9759089078f7d3b4fd6ee418107d3faa"
+    ],
+    "wiki/the-big-llm-architecture-comparison.md": [
+      "944cdcddb5308ff370c2f05390882bd4afd5ed2e1201af2f9e56acf9f90727ce"
+    ],
+    "wiki/understanding-large-language-models.md": [
+      "84139e72521584a892b185cfa555445c1cd1d5a5bbb4dc448325aaf8713a52dc"
     ]
   },
   "sources": {
@@ -39,8 +48,11 @@
     "4db67c6b6aea0a87e7f8a784b83fc05a0f1a61a3e87615fe7956e3486b951b3c": "wiki/claude-opus-4-6-system-card.md",
     "6477da70d562b739c5495c44272de34b9759089078f7d3b4fd6ee418107d3faa": "wiki/something-big-is-happening.md",
     "672339ab327e8798578b3559e8489561db5ad25e81b427de4e306393108e90b6": "wiki/claude-sonnet-4-6-system-card.md",
+    "84139e72521584a892b185cfa555445c1cd1d5a5bbb4dc448325aaf8713a52dc": "wiki/understanding-large-language-models.md",
+    "944cdcddb5308ff370c2f05390882bd4afd5ed2e1201af2f9e56acf9f90727ce": "wiki/the-big-llm-architecture-comparison.md",
     "9fb8cad79a7177c39c6fbbe82ac5bca6f7731497be25973031b4f8d628521bff": "wiki/dario-amodei-the-adolescence-of-technology.md",
     "b02bb412e14cc90da7549c81170e8484b51c62131523ad0e31c05d270db4687b": "wiki/dario-amodei.md",
+    "bed829db41afcc5836d2d33b967ec23742c9807dd6cb5880f2f819fe12fa31aa": "wiki/components-of-a-coding-agent.md",
     "fe2b9f7bd693d0239aa105e6c241c0569f67ddb55867e95384717928257a4de2": "wiki/dario-amodei-machines-of-loving-grace.md"
   }
 }
