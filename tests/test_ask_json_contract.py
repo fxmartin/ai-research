@@ -32,6 +32,8 @@ from pydantic import ValidationError
 from ai_research.wiki.ask import AskResponse, check_citations
 
 FIXTURE_VAULT = Path(__file__).parent / "fixtures" / "vault"
+REPO_ROOT = Path(__file__).resolve().parent.parent
+CLAUDE_COMMANDS_DIR = REPO_ROOT / ".claude" / "commands"
 
 
 # ---------------------------------------------------------------------------
@@ -175,6 +177,10 @@ def test_ask_json_contract_end_to_end(tmp_path: Path) -> None:
     """
     work = tmp_path / "vault"
     shutil.copytree(FIXTURE_VAULT, work)
+    # Claude Code discovers slash commands from `.claude/commands/` in CWD.
+    # The fixture vault doesn't ship them, so stage the project's commands
+    # into the tmp workspace before invoking `claude -p /ask ...`.
+    shutil.copytree(CLAUDE_COMMANDS_DIR, work / ".claude" / "commands")
 
     proc = subprocess.run(
         [
