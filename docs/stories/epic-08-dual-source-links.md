@@ -112,7 +112,7 @@
 **Technical Notes**: Tiny formatting helper in `sources.py`. The hash prefix stays in the path but not in the visible label.
 
 **Definition of Done**:
-- [ ] Helper + test.
+- [x] Helper + test.
 - [ ] Obsidian manual smoke: click opens the correct file.
 
 **Dependencies**: 08.1-001.
@@ -126,4 +126,4 @@
 - **External-URL archival** (wayback-style snapshots) — outside the scope of this epic.
 - **Re-hashing / re-archiving existing URLs already materialized before Epic-07** — the rewrite verb only backfills what's already in the ledger; a separate migration epic can handle historical re-archive.
 
-## Completed: 0 / 4
+## Completed: 1 / 4
