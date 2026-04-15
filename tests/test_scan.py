@@ -13,7 +13,7 @@ from typer.testing import CliRunner
 
 from ai_research.cli import app
 from ai_research.scan import scan_raw
-from ai_research.state import State, save_state
+from ai_research.state import SourceRecord, State, save_state
 
 runner = CliRunner()
 
@@ -86,7 +86,7 @@ def test_scan_skip_known_excludes_hashed_sources(raw_dir: Path, tmp_path: Path) 
     new.write_bytes(b"fresh content")
     _age_file(new, 60)
 
-    state = State(sources={_sha256_bytes(known_bytes): "wiki/known.md"})
+    state = State(sources={_sha256_bytes(known_bytes): SourceRecord(page="wiki/known.md")})
 
     results = scan_raw(raw_dir, skip_known=True, state=state)
     names = {Path(p).name for p in results}
@@ -99,7 +99,7 @@ def test_scan_without_skip_known_keeps_hashed(raw_dir: Path) -> None:
     f.write_bytes(data)
     _age_file(f, 60)
 
-    state = State(sources={_sha256_bytes(data): "wiki/dupe.md"})
+    state = State(sources={_sha256_bytes(data): SourceRecord(page="wiki/dupe.md")})
 
     results = scan_raw(raw_dir, skip_known=False, state=state)
     assert len(results) == 1
@@ -205,7 +205,10 @@ def test_cli_scan_skip_known_with_state(raw_dir: Path, tmp_path: Path) -> None:
     _age_file(new, 60)
 
     state_path = tmp_path / "state.json"
-    save_state(state_path, State(sources={_sha256_bytes(known_bytes): "wiki/known.md"}))
+    save_state(
+        state_path,
+        State(sources={_sha256_bytes(known_bytes): SourceRecord(page="wiki/known.md")}),
+    )
 
     result = runner.invoke(
         app,

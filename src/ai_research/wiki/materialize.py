@@ -37,7 +37,7 @@ from typing import TextIO
 import frontmatter
 
 from ai_research.archive import slugify
-from ai_research.state import State, atomic_write, load_state, save_state
+from ai_research.state import SourceRecord, State, atomic_write, load_state, save_state
 from ai_research.wiki.index_rebuild import rebuild_index
 from ai_research.wiki.sources import SourceEntry, merge_sources_section
 from ai_research.wiki.stubs import create_stubs_for_body, retire_stub_if_exists
@@ -112,7 +112,8 @@ def _existing_page_for(
     Prefers ``state.sources[source_hash]`` (resolved relative to the state
     file's anchor); falls back to the slug-derived ``candidate_path``.
     """
-    rel = state.sources.get(source_hash)
+    record = state.sources.get(source_hash)
+    rel = record.page if record is not None else None
     if rel:
         anchor = Path(state_path).resolve().parent.parent
         absolute = Path(rel) if Path(rel).is_absolute() else anchor / rel
@@ -275,7 +276,11 @@ def materialize(  # noqa: PLR0913 — CLI-shaped keyword API, not hot path.
     # earlier may have been against a stale view if callers shared state.
     state = load_state(state_path)
     rel_page = _relative_or_absolute(page_path, state_path)
-    state.sources[source_hash] = rel_page
+    # Preserve any existing archive_path (e.g. from a prior archive move);
+    # 07.1-001 only records the shape, 07.1-002 will set archive_path here.
+    prior = state.sources.get(source_hash)
+    prior_archive = prior.archive_path if prior is not None else None
+    state.sources[source_hash] = SourceRecord(page=rel_page, archive_path=prior_archive)
     existing_hashes = state.pages.get(rel_page, [])
     if source_hash not in existing_hashes:
         existing_hashes.append(source_hash)

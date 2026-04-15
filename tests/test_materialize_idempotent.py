@@ -144,7 +144,7 @@ def test_changed_source_hash_updates_page(tmp_path: Path) -> None:
     # State retains both historical hashes in pages[] but maps sources[new]=page.
     state = load_state(state_path)
     rel = str(r2.page_path.relative_to(tmp_path))
-    assert state.sources[r2.source_hash] == rel
+    assert state.sources[r2.source_hash].page == rel
     assert old_hash in state.pages[rel]
     assert r2.source_hash in state.pages[rel]
 
