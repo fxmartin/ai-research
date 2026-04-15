@@ -29,7 +29,13 @@ import mcp.types as mcp_types
 from ai_research.mcp_server.context import get_context
 from ai_research.wiki.ask import AskResponse, check_citations
 
-__all__ = ["TOOL", "AskRunner", "handle", "register", "run_claude_ask"]
+__all__ = ["ASK_TIMEOUT_SECONDS", "TOOL", "AskRunner", "handle", "register", "run_claude_ask"]
+
+# Hard ceiling on a single `claude -p /ask` invocation. The two-stage retrieval
+# (shortlist + read shortlisted pages + synthesize) should comfortably finish
+# well under this; anything longer is almost certainly a hung subprocess and
+# we would rather fail the MCP request cleanly than block the stdio loop.
+ASK_TIMEOUT_SECONDS = 180.0
 
 
 TOOL = mcp_types.Tool(
@@ -105,11 +111,20 @@ def run_claude_ask(question: str, *, cwd: Path, limit: int | None) -> str:
             capture_output=True,
             text=True,
             check=False,
+            timeout=ASK_TIMEOUT_SECONDS,
         )
     except FileNotFoundError as exc:
         raise RuntimeError(
             "`claude` CLI not found on PATH; the ask tool requires Claude Code "
             "to be installed to run the /ask slash command."
+        ) from exc
+    except subprocess.TimeoutExpired as exc:
+        # subprocess.run kills the child on timeout, but be explicit about the
+        # error surfaced to the MCP client so a hung /ask doesn't masquerade
+        # as a generic runtime failure.
+        raise RuntimeError(
+            f"`claude -p /ask` timed out after {ASK_TIMEOUT_SECONDS:.0f}s; "
+            "subprocess was terminated."
         ) from exc
     if completed.returncode != 0:
         raise RuntimeError(
