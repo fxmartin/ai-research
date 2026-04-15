@@ -21,6 +21,7 @@ from mcp.server import Server
 from mcp.server.stdio import stdio_server
 
 from ai_research.mcp_server.context import build_context, set_context
+from ai_research.mcp_server.tools import get_page as get_page_tool
 from ai_research.mcp_server.tools import search as search_tool
 
 SERVER_NAME = "ai-research"
@@ -33,6 +34,7 @@ def build_server() -> Server:
     registry: dict[str, dict[str, Any]] = {}
 
     search_tool.register(registry)
+    get_page_tool.register(registry)
 
     @server.list_tools()
     async def _list_tools() -> list[mcp_types.Tool]:
