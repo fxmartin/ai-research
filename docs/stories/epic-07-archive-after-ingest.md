@@ -150,8 +150,8 @@
 **Technical Notes**: Reverse lookup against `state.pages` / `state.sources`. Add `--json` output mode for programmatic callers.
 
 **Definition of Done**:
-- [ ] Verb added, tested, documented.
-- [ ] `--json` mode validated.
+- [x] Verb added, tested, documented.
+- [x] `--json` mode validated.
 
 **Dependencies**: 07.1-001.
 **Risk Level**: Low

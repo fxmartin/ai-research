@@ -146,6 +146,7 @@ The `ai-research` CLI is a deterministic, LLM-free file-ops toolkit. Slash comma
 | `search` | `rg` over `wiki/` with structured JSON hits | `ai-research search "sparse attention" --json` |
 | `vault-lint` | Obsidian smoke test — all wikilinks resolve, frontmatter parses | `ai-research vault-lint` |
 | `ask-check` | Validate that `[[page-name]]` citations in an answer resolve to real pages | `ai-research ask-check answer.json` |
+| `source lookup` | Reverse-lookup a wiki slug to its archived source bytes via `state.json` | `ai-research source lookup dario-amodei --json` |
 
 All verbs support `--json` for stdout, exit non-zero on failure, and perform zero LLM calls.
 
