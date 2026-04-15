@@ -143,8 +143,8 @@ def test_materialize_crash_mid_write_leaves_no_partial_file(tmp_path: Path) -> N
                 wiki_dir=wiki_dir,
                 state_path=state_path,
                 now=FIXED_NOW,
-        no_archive=True,
-    )
+                no_archive=True,
+            )
 
     assert not (wiki_dir / "title.md").exists()
     assert list(wiki_dir.glob("*.tmp*")) == [] if wiki_dir.exists() else True
@@ -163,8 +163,8 @@ def test_materialize_stdin_requires_stream(tmp_path: Path) -> None:
             state_path=state_path,
             now=FIXED_NOW,
             stdin=None,
-        no_archive=True,
-    )
+            no_archive=True,
+        )
 
 
 def test_materialize_missing_source_raises(tmp_path: Path) -> None:
@@ -177,8 +177,8 @@ def test_materialize_missing_source_raises(tmp_path: Path) -> None:
             wiki_dir=tmp_path / "wiki",
             state_path=tmp_path / "state.json",
             now=FIXED_NOW,
-        no_archive=True,
-    )
+            no_archive=True,
+        )
 
 
 def test_materialize_preserves_existing_frontmatter_in_draft(tmp_path: Path) -> None:
@@ -395,8 +395,8 @@ def test_materialize_payload_already_newline_terminated(tmp_path: Path) -> None:
             wiki_dir=wiki_dir,
             state_path=state_path,
             now=FIXED_NOW,
-        no_archive=True,
-    )
+            no_archive=True,
+        )
     content = result.page_path.read_bytes()
     assert content.endswith(b"\n")
     assert not content.endswith(b"\n\n\n")

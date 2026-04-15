@@ -147,9 +147,9 @@ def test_locked_page_does_not_archive(tmp_path: Path) -> None:
     )
     assert r2.status is MaterializeStatus.LOCKED
     assert src.exists(), "LOCKED must leave the source in raw/ for retry"
-    assert not (sources / "2026" / "04").exists() or not any(
-        (sources / "2026" / "04").iterdir()
-    ), "LOCKED must never archive"
+    assert not (sources / "2026" / "04").exists() or not any((sources / "2026" / "04").iterdir()), (
+        "LOCKED must never archive"
+    )
 
 
 def test_skipped_still_archives_idempotently(tmp_path: Path) -> None:
@@ -191,9 +191,7 @@ def test_archive_collision_preserves_page_and_rolls_back_state(tmp_path: Path) -
     draft = _draft(tmp_path)
 
     # Pre-plant a collision: a different file at the canonical target path.
-    target = compute_archive_path(
-        source=src, sources_root=sources, title="Foo", now=FIXED_NOW
-    )
+    target = compute_archive_path(source=src, sources_root=sources, title="Foo", now=FIXED_NOW)
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_bytes(b"tampered bytes\n")
 
@@ -216,6 +214,4 @@ def test_archive_collision_preserves_page_and_rolls_back_state(tmp_path: Path) -
     if state_path.exists():
         state = load_state(state_path)
         for rec in state.sources.values():
-            assert rec.archive_path is None or not rec.archive_path.endswith(
-                target.name
-            )
+            assert rec.archive_path is None or not rec.archive_path.endswith(target.name)

@@ -235,9 +235,7 @@ def materialize(  # noqa: PLR0913 — CLI-shaped keyword API, not hot path.
                 state = load_state(state_path)
                 rel_page = _relative_or_absolute(page_path, state_path)
                 archive_rel = _relative_or_absolute(archived, state_path)
-                state.sources[source_hash] = SourceRecord(
-                    page=rel_page, archive_path=archive_rel
-                )
+                state.sources[source_hash] = SourceRecord(page=rel_page, archive_path=archive_rel)
                 save_state(state_path, state)
             return MaterializeResult(
                 page_path=page_path,

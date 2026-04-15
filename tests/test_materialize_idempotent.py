@@ -235,7 +235,7 @@ def test_cli_emits_status_and_exits_zero_on_skip(tmp_path: Path) -> None:
     runner = CliRunner()
     args = [
         "materialize",
-            "--no-archive",
+        "--no-archive",
         "--source",
         str(source),
         "--from",
@@ -266,7 +266,7 @@ def test_cli_warns_and_exits_zero_when_locked(tmp_path: Path) -> None:
     runner = CliRunner()
     args = [
         "materialize",
-            "--no-archive",
+        "--no-archive",
         "--source",
         str(source),
         "--from",
@@ -304,7 +304,7 @@ def test_cli_force_flag(tmp_path: Path) -> None:
     runner = CliRunner()
     base = [
         "materialize",
-            "--no-archive",
+        "--no-archive",
         "--source",
         str(source),
         "--from",
