@@ -9,6 +9,7 @@ from unittest.mock import patch
 import pytest
 
 from ai_research.state import (
+    SourceRecord,
     State,
     atomic_write,
     find_page_by_source_hash,
@@ -28,12 +29,12 @@ def test_load_state_missing_returns_empty(tmp_path: Path) -> None:
 def test_save_then_load_roundtrip(tmp_path: Path) -> None:
     state_path = tmp_path / "state.json"
     state = State(
-        sources={"abc123": "wiki/concepts/foo.md"},
+        sources={"abc123": SourceRecord(page="wiki/concepts/foo.md")},
         pages={"wiki/concepts/foo.md": ["abc123"]},
     )
     save_state(state_path, state)
     loaded = load_state(state_path)
-    assert loaded.sources == {"abc123": "wiki/concepts/foo.md"}
+    assert loaded.sources == {"abc123": SourceRecord(page="wiki/concepts/foo.md")}
     assert loaded.pages == {"wiki/concepts/foo.md": ["abc123"]}
 
 
@@ -80,8 +81,8 @@ def test_atomic_write_leaves_original_on_crash(tmp_path: Path) -> None:
 def test_concurrent_writes_never_half_written(tmp_path: Path) -> None:
     """Simulate two writers; final state must be one of the complete payloads."""
     target = tmp_path / "state.json"
-    payload_a = State(sources={"a" * 8: "wiki/a.md"})
-    payload_b = State(sources={"b" * 8: "wiki/b.md"})
+    payload_a = State(sources={"a" * 8: SourceRecord(page="wiki/a.md")})
+    payload_b = State(sources={"b" * 8: SourceRecord(page="wiki/b.md")})
     save_state(target, payload_a)
     save_state(target, payload_b)
     loaded = load_state(target)
@@ -89,13 +90,122 @@ def test_concurrent_writes_never_half_written(tmp_path: Path) -> None:
 
 
 def test_find_page_by_source_hash_hit(tmp_path: Path) -> None:
-    state = State(sources={"deadbeef": "wiki/concepts/x.md"})
+    state = State(sources={"deadbeef": SourceRecord(page="wiki/concepts/x.md")})
     assert find_page_by_source_hash(state, "deadbeef") == "wiki/concepts/x.md"
 
 
 def test_find_page_by_source_hash_miss(tmp_path: Path) -> None:
-    state = State(sources={"deadbeef": "wiki/concepts/x.md"})
+    state = State(sources={"deadbeef": SourceRecord(page="wiki/concepts/x.md")})
     assert find_page_by_source_hash(state, "nope") is None
+
+
+# ---------------------------------------------------------------------------
+# Story 07.1-001: schema migration — old string-valued sources to new dict
+# ---------------------------------------------------------------------------
+
+
+def test_load_state_migrates_old_string_sources(tmp_path: Path) -> None:
+    """A pre-07.1 state.json with string-valued sources must load into the
+    new :class:`SourceRecord` shape with ``archive_path`` defaulting to None."""
+    state_path = tmp_path / "state.json"
+    state_path.write_text(
+        json.dumps(
+            {
+                "sources": {
+                    "deadbeef": "wiki/concepts/foo.md",
+                    "cafef00d": "wiki/concepts/bar.md",
+                },
+                "pages": {
+                    "wiki/concepts/foo.md": ["deadbeef"],
+                    "wiki/concepts/bar.md": ["cafef00d"],
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    loaded = load_state(state_path)
+    assert loaded.sources == {
+        "deadbeef": SourceRecord(page="wiki/concepts/foo.md", archive_path=None),
+        "cafef00d": SourceRecord(page="wiki/concepts/bar.md", archive_path=None),
+    }
+    # pages index must survive migration unchanged.
+    assert loaded.pages == {
+        "wiki/concepts/foo.md": ["deadbeef"],
+        "wiki/concepts/bar.md": ["cafef00d"],
+    }
+
+
+def test_save_after_migration_persists_new_shape(tmp_path: Path) -> None:
+    """A single save_state after migrating an old file writes the new shape."""
+    state_path = tmp_path / "state.json"
+    state_path.write_text(
+        json.dumps({"sources": {"abc": "wiki/x.md"}, "pages": {}}),
+        encoding="utf-8",
+    )
+
+    loaded = load_state(state_path)
+    save_state(state_path, loaded)
+
+    raw = json.loads(state_path.read_text(encoding="utf-8"))
+    assert raw["sources"] == {
+        "abc": {"page": "wiki/x.md", "archive_path": None},
+    }
+
+
+def test_save_load_roundtrip_with_archive_path(tmp_path: Path) -> None:
+    """New-shape entries with a set ``archive_path`` must round-trip verbatim."""
+    state_path = tmp_path / "state.json"
+    state = State(
+        sources={
+            "hash1": SourceRecord(
+                page="wiki/concepts/foo.md",
+                archive_path="sources/2026/04/hash1-foo.md",
+            ),
+            "hash2": SourceRecord(page="wiki/concepts/bar.md"),  # archive_path=None
+        },
+        pages={
+            "wiki/concepts/foo.md": ["hash1"],
+            "wiki/concepts/bar.md": ["hash2"],
+        },
+    )
+    save_state(state_path, state)
+    loaded = load_state(state_path)
+    assert loaded == state
+
+
+def test_scan_skip_known_still_works_after_migration(tmp_path: Path) -> None:
+    """Regression guard: ``scan --skip-known`` keys off ``state.sources.keys()``
+    — after old-format migration, hash membership must still be detectable."""
+    from ai_research.scan import scan_raw
+
+    state_path = tmp_path / "state.json"
+    # Seed an old-format state file containing one known hash.
+    known_hash = "a" * 64
+    state_path.write_text(
+        json.dumps({"sources": {known_hash: "wiki/known.md"}, "pages": {}}),
+        encoding="utf-8",
+    )
+
+    migrated = load_state(state_path)
+    # Migration must surface the hash as a key so ``.keys()`` lookup works.
+    assert known_hash in migrated.sources
+
+    inbox = tmp_path / "raw"
+    inbox.mkdir()
+    unknown = inbox / "new.md"
+    unknown.write_text("# Fresh\n\nBody.\n", encoding="utf-8")
+
+    # ``now`` is bumped well past the file mtime so min-age doesn't hide it.
+    results = scan_raw(
+        inbox,
+        state=migrated,
+        skip_known=True,
+        now=unknown.stat().st_mtime + 3600,
+    )
+    # The fresh file's hash is not ``known_hash`` → it should be eligible.
+    # Path is returned as a resolved absolute string.
+    assert str(unknown.resolve()) in results
 
 
 def test_load_state_invalid_schema_raises(tmp_path: Path) -> None:

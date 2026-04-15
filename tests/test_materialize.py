@@ -10,7 +10,7 @@ from unittest.mock import patch
 import frontmatter
 import pytest
 
-from ai_research.state import State, load_state, save_state
+from ai_research.state import SourceRecord, State, load_state, save_state
 from ai_research.wiki.materialize import (
     MaterializeResult,
     materialize,
@@ -74,7 +74,8 @@ def test_materialize_updates_state_mapping(tmp_path: Path) -> None:
 
     state = load_state(state_path)
     rel = str(result.page_path.relative_to(tmp_path))
-    assert state.sources[result.source_hash] == rel
+    assert state.sources[result.source_hash].page == rel
+    assert state.sources[result.source_hash].archive_path is None
     assert state.pages[rel] == [result.source_hash]
 
 
@@ -350,7 +351,7 @@ def test_materialize_page_outside_state_root_falls_back_to_absolute(tmp_path: Pa
     state = load_state(state_path)
     # Expect an absolute path string (fallback branch).
     recorded = state.sources[result.source_hash]
-    assert Path(recorded).is_absolute()
+    assert Path(recorded.page).is_absolute()
 
 
 def test_materialize_payload_already_newline_terminated(tmp_path: Path) -> None:
@@ -524,7 +525,10 @@ def test_materialize_cli_passes_source_url(tmp_path: Path) -> None:
 def test_materialize_appends_to_existing_state(tmp_path: Path) -> None:
     """An existing state.json entry is preserved when we add a new page."""
     state_path = tmp_path / "state.json"
-    save_state(state_path, State(sources={"deadbeef": "wiki/other.md"}))
+    save_state(
+        state_path,
+        State(sources={"deadbeef": SourceRecord(page="wiki/other.md")}),
+    )
 
     source = _setup_source(tmp_path)
     draft = tmp_path / "draft.md"
@@ -540,5 +544,5 @@ def test_materialize_appends_to_existing_state(tmp_path: Path) -> None:
     )
 
     state = load_state(state_path)
-    assert state.sources["deadbeef"] == "wiki/other.md"
+    assert state.sources["deadbeef"].page == "wiki/other.md"
     assert result.source_hash in state.sources
