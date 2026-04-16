@@ -26,9 +26,11 @@ ai-research/
 │   └── llm/               # LLM provider abstraction
 ├── tests/
 ├── wiki-data/             # Example/scratch wiki output (gitignored)
+├── docs/
+│   ├── PROJECT-SEED.md
+│   └── REQUIREMENTS.md
 ├── pyproject.toml
 ├── CLAUDE.md
-├── PROJECT-SEED.md
 └── .gitignore
 ```
 
@@ -138,7 +140,7 @@ docs/stories/
 
 ## Key Docs
 
-- `PROJECT-SEED.md` — bootstrap seed from `/project-init`.
-- `REQUIREMENTS.md` — full PRD (problems, scope, P0/P1/P2, phases, risks).
+- `docs/PROJECT-SEED.md` — bootstrap seed from `/project-init`.
+- `docs/REQUIREMENTS.md` — full PRD (problems, scope, P0/P1/P2, phases, risks).
 - `docs/STORIES.md` — story overview + epic navigation.
 - Source paper: https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f

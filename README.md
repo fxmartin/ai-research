@@ -12,7 +12,7 @@ A local, Claude Code-native implementation of Karpathy's [LLM-Wiki pattern](http
 
 Traditional RAG stacks re-derive context from raw sources on every query. `ai-research` replaces that with a persistent, human-readable wiki that an LLM maintains for you. You drop sources in; the LLM writes summaries, cross-links concepts, and flags contradictions. The resulting `wiki/` is a plain Obsidian vault — portable, diff-able, and useful even if this project disappears.
 
-See [`REQUIREMENTS.md`](REQUIREMENTS.md) for the full PRD.
+See [`docs/REQUIREMENTS.md`](docs/REQUIREMENTS.md) for the full PRD.
 
 ## How it works
 
@@ -267,7 +267,7 @@ See [`CLAUDE.md`](CLAUDE.md) for the testing strategy and story-management proto
 
 ## Roadmap
 
-Full detail in [`docs/STORIES.md`](docs/STORIES.md) and [`REQUIREMENTS.md`](REQUIREMENTS.md).
+Full detail in [`docs/STORIES.md`](docs/STORIES.md) and [`docs/REQUIREMENTS.md`](docs/REQUIREMENTS.md).
 
 - **MVP** (Epics 01–04): PDF + URL + markdown ingest, cross-linking, `/ask`, Obsidian-clean vault, idempotent re-ingest, CI.
 - **Phase 2** (Epic-05): YouTube transcripts, contradiction detection, `/status`, launchd agent template.
