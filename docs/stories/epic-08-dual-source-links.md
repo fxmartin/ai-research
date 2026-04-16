@@ -39,9 +39,9 @@
 **Technical Notes**: Update `src/ai_research/wiki/sources.py` — `SourceEntry` already has `title`, `path`, `url`; add `archive_path: str | None`. Update `_format_entry` and `_parse_entry` symmetrically. Merge logic must treat a tuple of (URL, Archive) as one entry identified by the source_hash, not two. Obsidian prefers Markdown-flavor links `[text](path)` for non-wikilink file references — keep wikilinks reserved for concepts.
 
 **Definition of Done**:
-- [ ] `SourceEntry` extended; `merge_sources_section` emits both bullets.
-- [ ] Unit tests: URL+archive, archive-only, URL-only (legacy), re-materialize with additional source.
-- [ ] Golden-file test: fixture page with two sources renders both pairs.
+- [x] `SourceEntry` extended; `merge_sources_section` emits both bullets.
+- [x] Unit tests: URL+archive, archive-only, URL-only (legacy), re-materialize with additional source.
+- [x] Golden-file test: fixture page with two sources renders both pairs.
 
 **Dependencies**: Epic-07.1-001 (`archive_path` in state.json), Epic-07.1-002 (materialize populates it).
 **Risk Level**: Medium (source-section parsing is load-bearing; existing idempotency tests must stay green)
@@ -60,8 +60,8 @@
 **Technical Notes**: Small wiring change in `src/ai_research/wiki/materialize.py` between `archive_source(...)` and `merge_sources_section(...)`. Order must be: archive → build entry → merge → atomic_write.
 
 **Definition of Done**:
-- [ ] Wiring in place; integration test covers end-to-end.
-- [ ] `--no-archive` path still renders URL bullet only.
+- [x] Wiring in place; integration test covers end-to-end.
+- [x] `--no-archive` path still renders URL bullet only.
 
 **Dependencies**: 08.1-001, Epic-07.1-002.
 **Risk Level**: Low
@@ -87,9 +87,9 @@
 **Technical Notes**: Reuse `merge_sources_section` logic for the rewrite, keyed on `source_hash`. The rewrite touches only the `## Sources` section — no other bytes should change. Atomic write per page (temp + rename). Rebuild the index once at the end if any pages were updated.
 
 **Definition of Done**:
-- [ ] Verb added, `--dry-run` + `--force` supported.
-- [ ] Golden-file test: vault with mixed legacy/new pages rewrites only the legacy-with-archive ones.
-- [ ] README + `.claude/commands/` prose updated.
+- [x] Verb added, `--dry-run` + `--force` supported.
+- [x] Golden-file test: vault with mixed legacy/new pages rewrites only the legacy-with-archive ones.
+- [x] README + `.claude/commands/` prose updated.
 
 **Dependencies**: 08.1-001, Epic-07.1-001 (state schema).
 **Risk Level**: Medium (touches every page — byte-diff discipline is the entire job)
@@ -126,4 +126,11 @@
 - **External-URL archival** (wayback-style snapshots) — outside the scope of this epic.
 - **Re-hashing / re-archiving existing URLs already materialized before Epic-07** — the rewrite verb only backfills what's already in the ledger; a separate migration epic can handle historical re-archive.
 
-## Completed: 1 / 4
+## Epic Progress
+
+- [x] Story 08.1-001 (5 pts)
+- [x] Story 08.1-002 (2 pts)
+- [x] Story 08.2-001 (3 pts)
+- [x] Story 08.3-001 (1 pt)
+
+**Completed**: 4 / 4 stories · 11 / 11 pts.

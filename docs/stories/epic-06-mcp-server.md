@@ -33,9 +33,9 @@
 **Technical Notes**: Prefer the official `mcp` SDK; FastMCP acceptable if it simplifies. Package: `src/ai_research/mcp_server/`. No FastAPI. Stdio only.
 
 **Definition of Done**:
-- [ ] `[project.scripts]` declares `ai-research-mcp`.
-- [ ] `mcp` added as dependency.
-- [ ] Smoke test: spawn the binary, send `initialize`, assert response.
+- [x] `[project.scripts]` declares `ai-research-mcp`.
+- [x] `mcp` added as dependency.
+- [x] Smoke test: spawn the binary, send `initialize`, assert response.
 
 **Dependencies**: Epic-01 (Foundation)
 **Risk Level**: Low
@@ -102,7 +102,7 @@
 **Technical Notes**: Thin wrapper around `ai-research search --json`. No LLM call. Instant.
 
 **Definition of Done**:
-- [ ] Tool + unit test.
+- [x] Tool + unit test.
 
 **Dependencies**: 01.3-002, 06.1-001
 **Risk Level**: Low
@@ -218,13 +218,13 @@
 
 ## Epic Progress
 
-- [ ] Story 06.1-001 (2 pts)
+- [x] Story 06.1-001 (2 pts)
 - [x] Story 06.1-002 (2 pts)
 - [x] Story 06.2-001 (5 pts)
 - [x] Story 06.2-002 (2 pts)
-- [ ] Story 06.2-003 (2 pts)
+- [x] Story 06.2-003 (2 pts)
 - [x] Story 06.2-004 (3 pts)
-- [ ] Story 06.3-001 (1 pt)
+- [x] Story 06.3-001 (1 pt)
 - [x] Story 06.3-002 (2 pts)
 
-**Completed**: 2 / 8 stories · 7 / 19 pts.
+**Completed**: 8 / 8 stories · 19 / 19 pts.

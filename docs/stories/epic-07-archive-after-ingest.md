@@ -34,9 +34,9 @@
 **Technical Notes**: Extend the `State` dataclass/model in `src/ai_research/state.py`. Keep the JSON schema backwards-readable for one release (warn on migration). Update `tests/test_state.py` with old-format → new-format migration fixtures.
 
 **Definition of Done**:
-- [ ] Old-format state files load without manual intervention.
-- [ ] New ingests write the new shape.
-- [ ] `scan --skip-known` regression tests green.
+- [x] Old-format state files load without manual intervention.
+- [x] New ingests write the new shape.
+- [x] `scan --skip-known` regression tests green.
 
 **Dependencies**: None.
 **Risk Level**: Medium (format change — migration must be boringly correct)
@@ -104,8 +104,8 @@
 **Technical Notes**: Update `.claude/commands/ingest-inbox.md` prose: drop the "raw file remains in place" caveat introduced earlier; add the `archived:` line to the summary.
 
 **Definition of Done**:
-- [ ] Contract prose updated.
-- [ ] Headless JSON summary includes `archived` entries (once the summary gains structure).
+- [x] Contract prose updated.
+- [x] Headless JSON summary includes `archived` entries (once the summary gains structure).
 - [ ] Manual end-to-end: drop a test file in `wiki/raw/`, run `/ingest-inbox`, verify it lands in `sources/`.
 
 **Dependencies**: 07.1-002.
@@ -125,8 +125,8 @@
 **Technical Notes**: Prose-only change in `.claude/commands/ingest.md`.
 
 **Definition of Done**:
-- [ ] Contract updated.
-- [ ] Examples refreshed.
+- [x] Contract updated.
+- [x] Examples refreshed.
 
 **Dependencies**: 07.1-002.
 **Risk Level**: Low
@@ -164,4 +164,13 @@
 - **Archive pruning / retention policies** — `sources/` is intentionally append-only.
 - **Remote archive backends** (S3, etc.) — local filesystem only in this epic.
 
-## Completed: 0 / 6
+## Epic Progress
+
+- [x] Story 07.1-001 (3 pts)
+- [x] Story 07.1-002 (5 pts)
+- [x] Story 07.1-003 (2 pts)
+- [x] Story 07.2-001 (2 pts)
+- [x] Story 07.2-002 (1 pt)
+- [x] Story 07.3-001 (2 pts)
+
+**Completed**: 6 / 6 stories · 15 / 15 pts.
